@@ -27,18 +27,18 @@
 /**********************************************************************
 % COMPLETE THIS TEXT BOX:
 %
-% 1) Student Name:		
+% 1) Student Name: Kyle Lewis
 % 2) Student Name:		
 %
-% 1) Student number:
+% 1) Student number: 1006113215
 % 2) Student number:
 % 
-% 1) UtorID
+% 1) UtorID Lewisky2
 % 2) UtorID
 % 
 % We hereby certify that the work contained here is our own
 %
-% ____________________             _____________________
+% Kyle Lewis		             _____________________
 % (sign with your name)            (sign with your name)
 ***********************************************************************/
 

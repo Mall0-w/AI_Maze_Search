@@ -2,15 +2,15 @@ CSC D84 - Artificial Intelligence, Unit 1 - Search
 
 ________________________________________________
 
-Student Name 1 (last, first):
+Student Name 1 (last, first): Lewis, Kyle
 
 Student Name 2 (last, first):
 
-Student number 1:
+Student number 1: 1006113215
 
 Student number 2:
 
-UTORid 1:
+UTORid 1: Lewisky2
 
 UTORid 2:
 
@@ -20,7 +20,7 @@ READ THIS AND SIGN YOUR NAME AT THE END:
 honesty and plaguarism. All work submitted as part
 of this assignment is my own.
 
-	Signed: _(student 1 name here)__	_(student 2 name here)__
+	Signed: _Kyle Lewis__	_(student 2 name here)__
 
 
 (-2.5 marks for failing to provide the identifying
@@ -33,9 +33,16 @@ but explain carefully when needed.
 1 .- (1 marks) Of BFS and DFS, which search algorithm yields the best results? (i.e. which is more likely
      to get the mouse to the cheese safely before being eaten?)
 
+     BFS; it gets the mouse to the cheese in the fewest steps, meaning it minimizes the chances of it crossing paths with the Mouse
+
 
 2 .- (1 marks) Does this mean that in general BFS is a better search algorithm? (yes/no and give reasons to
      support your answer based on your observations)
+
+     No it depends entirely on context, BFS will always find the shortest path but in terms of performance it can vary.
+     BFS will work better if the solutions aren't very far from the start (less of a queue developed and less paths to analyze)
+     whereas BFS will work better if the solutions are far from the start (it goes as far as it can first)
+     worst case however, they both preform the same.
 
 
 3 .- (2 marks) Describe the heuristic function you used for A* search. Why is this heuristic admissible?
