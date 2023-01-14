@@ -43,6 +43,97 @@
 ***********************************************************************/
 
 #include "AI_search.h"
+#include "stdbool.h"
+
+/**
+ * defining nodes and queues for linked lists
+*/
+typedef struct Node{
+	int value;
+	Node* next;
+}Node;
+
+typedef struct Queue{
+	Node* first;
+	Node* last;
+} Queue;
+
+/**
+ * defining basic functions for queue functionality
+*/
+Queue* createQueue(){
+	Queue* newQueue = calloc(1, sizeof(Queue));
+	if(newQueue == NULL){
+		printf('Not enough memory for queue');
+		return NULL;
+	}
+	newQueue->first = NULL;
+	newQueue->last = NULL;
+
+	return newQueue;
+}
+
+Node* createNode(int value){
+	Node* newNode = calloc(1, sizeof(Node));
+	if(newNode == NULL){
+		printf('not enoguh memory for new node');
+		return NULL;
+	}
+	newNode->value = value;
+	newNode->next = NULL;
+
+	return newNode;
+}
+
+void enQueue(Queue* queue, int value){
+	Node* newNode = createNode(value);
+	if(queue->first == NULL){
+		queue->first = newNode;
+		queue->last = newNode;
+		return;
+	}
+	queue->last->next = newNode;
+	queue->last = newNode;
+	return;
+}
+
+int deQueue(Queue* queue){
+	if(queue->first == NULL){
+		printf('Nothing in queue');
+		return -1;
+	}
+	Node* first = queue->first;
+	queue->first = queue->first->next;
+	if(queue->first == NULL){
+		queue->last = NULL;
+	}
+	int val = first->value;
+	free(first);
+	return val;
+}
+
+void freeQueue(Queue* queue){
+	Node* first = queue->first;
+	Node* temp = NULL;
+	while(first != NULL){
+		temp = first->next;
+		free(first);
+		first = temp;
+	}
+	queue->last = NULL;
+	free(queue);
+	return;
+}
+
+//Helper function used to determine if a pair of coordinates are in an array
+int indexInArray(int coords[2],int size, int* array){
+	for(int i = 0; i < size; i++){
+		if ((array+i)[0] == coords[0] && (array+i)[1] == coords[1]){
+			return i;
+		}
+	}
+	return -1;
+}
 
 void search(double gr[graph_size][4], int path[graph_size][2], int visit_order[size_X][size_Y], int cat_loc[10][2], int cats, int cheese_loc[10][2], int cheeses, int mouse_loc[1][2], int mode, int (*heuristic)(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_loc[1][2], int cats, int cheeses, double gr[graph_size][4]))
 {
@@ -245,5 +336,71 @@ int H_cost_nokitty(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int 
  */
 
  return(1);		// <-- Evidently you will need to update this.
+}
+
+// Helper function used to do bfs on graph
+int bfs(double gr[graph_size][4], int path[graph_size][2], int visit_order[size_X][size_Y], int cat_loc[10][2], int cats, int cheese_loc[10][2], int cheeses, int mouse_loc[1][2]){
+	//start a queue
+	//while queue is not empty and they are still cheeses
+	//continue god's work
+
+	int cheese_collected = 0;
+	bool visited_nodes[graph_size] = {false};
+
+	Queue* queue = createQueue();
+	//queuing the current mouse position
+	enQueue(queue,get_grid_position(mouse_loc[0])); 
+
+	while(queue->first != NULL && cheese_collected < cheeses ){
+		//dequeue position
+		int curr_pos = deQueue(queue);
+		//if node has already been visited, skip it
+		if(visited_nodes[curr_pos]){
+			continue;
+		}
+		//mark node as visited
+		visited_nodes[curr_pos] = true;
+
+
+
+		//check various grid locations
+		if(gr[curr_pos][0] == 1){
+			//if one higher is possible, then add current_postition up on (minus y) to queue
+			enQueue(queue,curr_pos - size_Y);
+		}
+		if(gr[curr_pos][1] == 1){
+			enQueue(queue,curr_pos + 1);
+		}
+		if(gr[curr_pos][2] == 1){
+			enQueue(queue,curr_pos + size_Y);
+		}
+		if(gr[curr_pos][3] == 1){
+			enQueue(queue, curr_pos - 1);
+		}
+	}
+
+
+	return;
+}
+
+//helper function used to do dfs on a graph
+int dfs(double gr[graph_size][4], int path[graph_size][2], int visit_order[size_X][size_Y], int cat_loc[10][2], int cats, int cheese_loc[10][2], int cheeses, int mouse_loc[1][2]){
+	//recursively
+	//if goal is a cheese and all cheeses collected
+	//return with some success status
+	//if can't move, return some failure status
+
+	//go down options of top->right->bottom->down, modifying them as you go
+	//if success then return
+}
+
+int get_grid_position(int coords[2]){
+	return (coords[0] + (size_X * coords[1]));
+}
+
+
+//helper function used to do a* on a graph
+int a_star(){
+
 }
 
