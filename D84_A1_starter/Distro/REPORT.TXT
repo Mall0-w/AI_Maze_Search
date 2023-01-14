@@ -61,6 +61,9 @@ but explain carefully when needed.
      (i.e. is there anything we are missing that could lead to a smarter mouse?) - this is
      a more or less open question, but we talked about it in lecture!
 
+     I think data is more or less the largest limitation.  For example, if we could get the entire planned paths of each cat
+     or a small sample of them that could help our mice exponentially in terms of avoiding cats. However, if we were to start
+     considering paths like that, it would make our programs much more complex as they will begin to handle insane numbers of parameters.
 _____________________________________________________
 
 Mark with an 'x' where appropriate. If something is only working partially, briefly describe what works, what

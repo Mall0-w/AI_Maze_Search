@@ -501,6 +501,8 @@ int H_cost(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_lo
 		These arguments are as described in the search() function above
  */
 
+	//have the cost be the minimum length between x,y and a cheese
+
  return(1);		// <-- Evidently you will need to update this.
 }
 
@@ -520,6 +522,15 @@ int H_cost_nokitty(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int 
 
 	Input arguments have the same meaning as in the H_cost() function above.
  */
+
+	//want to maximize amounts of moves it takes cats to get to mouse
+	//calculate sum of amount of moves it takes to get to mouse however, have them exponentially
+	//more expensive as cats get closer to mouse
+	//if going to collide with a cat, make it as expensive as possible
+	int sum = 0;
+	for(int i = 0; i < cats; i++){
+		
+	}
 
  return(1);		// <-- Evidently you will need to update this.
 }
