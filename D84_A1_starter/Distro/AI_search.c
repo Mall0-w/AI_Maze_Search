@@ -62,9 +62,9 @@ typedef struct Queue{
  * defining basic functions for queue functionality
 */
 Queue* createQueue(){
-	Queue* newQueue = calloc(1, sizeof(Queue));
+	Queue* newQueue = (Queue*)calloc(1, sizeof(Queue));
 	if(newQueue == NULL){
-		printf('Not enough memory for queue');
+		printf("Not enough memory for queue");
 		return NULL;
 	}
 	newQueue->first = NULL;
@@ -74,9 +74,9 @@ Queue* createQueue(){
 }
 
 Node* createNode(int value){
-	Node* newNode = calloc(1, sizeof(Node));
+	Node* newNode = (Node*)calloc(1, sizeof(Node));
 	if(newNode == NULL){
-		printf('not enoguh memory for new node');
+		printf("not enoguh memory for new node");
 		return NULL;
 	}
 	newNode->value = value;
@@ -90,16 +90,18 @@ void enQueue(Queue* queue, int value){
 	if(queue->first == NULL){
 		queue->first = newNode;
 		queue->last = newNode;
+		printf("queued %d\n",value);
 		return;
 	}
 	queue->last->next = newNode;
 	queue->last = newNode;
+	printf("queued %d\n",value);
 	return;
 }
 
 int deQueue(Queue* queue){
 	if(queue->first == NULL){
-		printf('Nothing in queue');
+		printf("Nothing in queue");
 		return -1;
 	}
 	Node* first = queue->first;
@@ -125,14 +127,140 @@ void freeQueue(Queue* queue){
 	return;
 }
 
+//helper function to get grid position from cords
+int get_grid_position(int coords[2]){
+	// printf("converting grid [%d,%d] to %d\n",coords[0],coords[1],(coords[0] + (size_X * coords[1])));
+	return (coords[0] + (size_X * coords[1]));
+}
+
 //Helper function used to determine if a pair of coordinates are in an array
-int indexInArray(int coords[2],int size, int* array){
+int coordsInArray(int coords ,int (*array)[2],int size){
+	//printf("cords in array\n");
 	for(int i = 0; i < size; i++){
-		if ((array+i)[0] == coords[0] && (array+i)[1] == coords[1]){
+		if (coords == get_grid_position(*(array+i))){
+	//		printf("cords found\n");
 			return i;
 		}
 	}
+	//printf("cords not found\n");
 	return -1;
+}
+
+// Helper function used to do bfs on graph
+void bfs(double gr[graph_size][4], int path[graph_size][2], int visit_order[size_X][size_Y], int cat_loc[10][2], int cats, int cheese_loc[10][2], int cheeses, int mouse_loc[1][2]){
+	//start a queue
+	//while queue is not empty and they are still cheeses
+	//continue god's work
+
+	int cheese_index = -1;
+	int mouse_grid = get_grid_position(mouse_loc[0]);
+	int predecessor[graph_size];
+	int iteration = 0;
+	
+	//initalizing the predecessor arr
+	for(int i = 0; i < graph_size; i++){
+		predecessor[i] = -1;
+	}
+
+	Queue* queue = createQueue();
+	//queuing the current mouse position
+	enQueue(queue,mouse_grid); 
+
+	while(queue != NULL && queue->first != NULL && cheese_index < 0){
+		//dequeue position
+		//printf("deQueue\n");
+		int curr_pos = deQueue(queue);
+		//printf("see if cheese\n");
+		cheese_index = coordsInArray(curr_pos,cheese_loc,cheeses);
+		//marking off order visited
+		visit_order[curr_pos % size_X][(int) curr_pos / size_X] = iteration;
+
+		//check various grid locations
+		//printf("cats\n");
+		// printf("curr_pos: %d\n",curr_pos);
+		// printf("testing %d\n", (int) gr[curr_pos][0] == 1);
+		// printf("will collide with cat %d\n",(int) ! (coordsInArray(curr_pos-size_X,cat_loc,cats) < 0));
+		// printf("out of range %d\n",(int)curr_pos - size_X >= 0);
+		// printf("visited %d\n",predecessor[curr_pos-size_X] == -1);
+		if(gr[curr_pos][0] == 1 && coordsInArray(curr_pos-size_X,cat_loc,cats) < 0 && curr_pos - size_X >= 0 && predecessor[curr_pos-size_X] == -1){
+			//if one higher is possible, then add current_postition up on (minus y) to queue
+			predecessor[curr_pos-size_X] = curr_pos;
+			enQueue(queue,curr_pos - size_X);
+			// printf("something got queued");
+		}
+		if(gr[curr_pos][1] == 1 && coordsInArray(curr_pos+1,cat_loc,cats) < 0 && curr_pos+1 < graph_size  && predecessor[curr_pos+1] == -1){
+			predecessor[curr_pos+1] = curr_pos;
+			enQueue(queue,curr_pos + 1);
+			// printf("something got queued");
+		}
+		if(gr[curr_pos][2] == 1 && coordsInArray(curr_pos+size_X,cat_loc,cats) < 0 && curr_pos + size_X < graph_size && predecessor[curr_pos+size_X] == -1){
+			predecessor[curr_pos+size_X] = curr_pos;
+			enQueue(queue,curr_pos + size_X);
+			// printf("something got queued");
+		}
+		if(gr[curr_pos][3] == 1 && coordsInArray(curr_pos-1,cat_loc,cats) < 0 && curr_pos -1 >= 0  && predecessor[curr_pos-1] == -1){
+			predecessor[curr_pos-1] = curr_pos;
+			enQueue(queue, curr_pos - 1);
+			// printf("something got queued");
+		}
+		//printf("iterate\n");
+		iteration++;
+	}
+
+	//if didn't find cheese index just return
+	if(cheese_index == -1){
+		return;
+	}
+	//otherwise go through predessecors to get path in reverse order then reverse it
+	int curr_cords = get_grid_position(cheese_loc[cheese_index]);
+	int path_index = 0;
+	while(curr_cords != mouse_grid){
+		//add the current cords to the path (by operating on its grid value)
+		//then go to its predessecor
+		path[path_index][0] = curr_cords % size_X;
+		path[path_index][1] = (int) curr_cords / size_X;
+		printf("[%d,%d]\n",curr_cords % size_X,(int) curr_cords / size_X);
+		printf("predessecor %d\n",predecessor[curr_cords]);
+
+		curr_cords = predecessor[curr_cords];
+		path_index++;
+	}
+	path[path_index][0] = mouse_loc[0][0];
+	path[path_index][1] = mouse_loc[0][1];
+	path_index++;
+
+	//first path_index+1 elements should have the path in reverse order, so just reverse those elements
+	//path_index = len(path) - 1
+
+	for(int i = 0; i < (path_index + 1) / 2; i++){
+		int temp[2] = {path[i][0], path[i][1]};
+		path[i][0] = path[path_index-i][0];
+		path[i][1] = path[path_index-i][1];
+		path[path_index - i][0] = temp[0];
+		path[path_index-i][1] = temp[1];
+	}
+
+
+	freeQueue(queue);
+	return;
+}
+
+//helper function used to do dfs on a graph
+void dfs(double gr[graph_size][4], int path[graph_size][2], int visit_order[size_X][size_Y], int cat_loc[10][2], int cats, int cheese_loc[10][2], int cheeses, int mouse_loc[1][2]){
+	//recursively
+	//if goal is a cheese and all cheeses collected
+	//return with some success status
+	//if can't move, return some failure status
+
+	//go down options of top->right->bottom->down, modifying them as you go
+	//if success then return
+	return;
+}
+
+
+//helper function used to do a* on a graph
+void a_star(){
+	return;
 }
 
 void search(double gr[graph_size][4], int path[graph_size][2], int visit_order[size_X][size_Y], int cat_loc[10][2], int cats, int cheese_loc[10][2], int cheeses, int mouse_loc[1][2], int mode, int (*heuristic)(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_loc[1][2], int cats, int cheeses, double gr[graph_size][4]))
@@ -286,10 +414,14 @@ void search(double gr[graph_size][4], int path[graph_size][2], int visit_order[s
 
  // Stub so that the code compiles/runs - The code below will be removed and replaced by your code!
 
- path[0][0]=mouse_loc[0][0];
- path[0][1]=mouse_loc[0][1];
- path[1][0]=mouse_loc[0][0];
- path[1][1]=mouse_loc[0][1];
+	if(mode == 0){
+		bfs(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,mouse_loc);
+	}else{
+		path[0][0]=mouse_loc[0][0];
+		path[0][1]=mouse_loc[0][1];
+		path[1][0]=mouse_loc[0][0];
+		path[1][1]=mouse_loc[0][1];
+	}
 
  return;
 }
@@ -336,71 +468,5 @@ int H_cost_nokitty(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int 
  */
 
  return(1);		// <-- Evidently you will need to update this.
-}
-
-// Helper function used to do bfs on graph
-int bfs(double gr[graph_size][4], int path[graph_size][2], int visit_order[size_X][size_Y], int cat_loc[10][2], int cats, int cheese_loc[10][2], int cheeses, int mouse_loc[1][2]){
-	//start a queue
-	//while queue is not empty and they are still cheeses
-	//continue god's work
-
-	int cheese_collected = 0;
-	bool visited_nodes[graph_size] = {false};
-
-	Queue* queue = createQueue();
-	//queuing the current mouse position
-	enQueue(queue,get_grid_position(mouse_loc[0])); 
-
-	while(queue->first != NULL && cheese_collected < cheeses ){
-		//dequeue position
-		int curr_pos = deQueue(queue);
-		//if node has already been visited, skip it
-		if(visited_nodes[curr_pos]){
-			continue;
-		}
-		//mark node as visited
-		visited_nodes[curr_pos] = true;
-
-
-
-		//check various grid locations
-		if(gr[curr_pos][0] == 1){
-			//if one higher is possible, then add current_postition up on (minus y) to queue
-			enQueue(queue,curr_pos - size_Y);
-		}
-		if(gr[curr_pos][1] == 1){
-			enQueue(queue,curr_pos + 1);
-		}
-		if(gr[curr_pos][2] == 1){
-			enQueue(queue,curr_pos + size_Y);
-		}
-		if(gr[curr_pos][3] == 1){
-			enQueue(queue, curr_pos - 1);
-		}
-	}
-
-
-	return;
-}
-
-//helper function used to do dfs on a graph
-int dfs(double gr[graph_size][4], int path[graph_size][2], int visit_order[size_X][size_Y], int cat_loc[10][2], int cats, int cheese_loc[10][2], int cheeses, int mouse_loc[1][2]){
-	//recursively
-	//if goal is a cheese and all cheeses collected
-	//return with some success status
-	//if can't move, return some failure status
-
-	//go down options of top->right->bottom->down, modifying them as you go
-	//if success then return
-}
-
-int get_grid_position(int coords[2]){
-	return (coords[0] + (size_X * coords[1]));
-}
-
-
-//helper function used to do a* on a graph
-int a_star(){
-
 }
 
