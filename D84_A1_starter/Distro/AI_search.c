@@ -90,12 +90,12 @@ void enQueue(Queue* queue, int value){
 	if(queue->first == NULL){
 		queue->first = newNode;
 		queue->last = newNode;
-		printf("queued %d\n",value);
+		// printf("queued %d\n",value);
 		return;
 	}
 	queue->last->next = newNode;
 	queue->last = newNode;
-	printf("queued %d\n",value);
+	// printf("queued %d\n",value);
 	return;
 }
 
@@ -124,6 +124,17 @@ void freeQueue(Queue* queue){
 	}
 	queue->last = NULL;
 	free(queue);
+	return;
+}
+
+void print_path(int (*path)[2]){
+	for(int i = 0; i < graph_size; i++){
+		if(path[i][0] == -1 || path[i][1] == -1){
+			printf("i:%d\n",i);
+			break;
+		}
+		printf("[%d,%d]->",path[i][0],path[i][1]);
+	}
 	return;
 }
 
@@ -173,7 +184,7 @@ void bfs(double gr[graph_size][4], int path[graph_size][2], int visit_order[size
 		//printf("see if cheese\n");
 		cheese_index = coordsInArray(curr_pos,cheese_loc,cheeses);
 		//marking off order visited
-		visit_order[curr_pos % size_X][(int) curr_pos / size_X] = iteration;
+		visit_order[curr_pos % size_X][(int) curr_pos / size_Y] = iteration;
 
 		//check various grid locations
 		//printf("cats\n");
@@ -218,9 +229,9 @@ void bfs(double gr[graph_size][4], int path[graph_size][2], int visit_order[size
 		//add the current cords to the path (by operating on its grid value)
 		//then go to its predessecor
 		path[path_index][0] = curr_cords % size_X;
-		path[path_index][1] = (int) curr_cords / size_X;
-		printf("[%d,%d]\n",curr_cords % size_X,(int) curr_cords / size_X);
-		printf("predessecor %d\n",predecessor[curr_cords]);
+		path[path_index][1] = (int) curr_cords / size_Y;
+		// printf("[%d,%d]\n",curr_cords % size_X,(int) curr_cords / size_Y);
+		// printf("predessecor %d\n",predecessor[curr_cords]);
 
 		curr_cords = predecessor[curr_cords];
 		path_index++;
@@ -228,19 +239,22 @@ void bfs(double gr[graph_size][4], int path[graph_size][2], int visit_order[size
 	path[path_index][0] = mouse_loc[0][0];
 	path[path_index][1] = mouse_loc[0][1];
 	path_index++;
+	// printf("before reversing, %d\n", path_index);
+	// print_path(path);
 
 	//first path_index+1 elements should have the path in reverse order, so just reverse those elements
-	//path_index = len(path) - 1
+	//path_index = len(path)
 
-	for(int i = 0; i < (path_index + 1) / 2; i++){
+	for(int i = 0; i < (path_index) / 2; i++){
 		int temp[2] = {path[i][0], path[i][1]};
-		path[i][0] = path[path_index-i][0];
-		path[i][1] = path[path_index-i][1];
-		path[path_index - i][0] = temp[0];
-		path[path_index-i][1] = temp[1];
+		path[i][0] = path[path_index-1-i][0];
+		path[i][1] = path[path_index-1-i][1];
+		path[path_index-1-i][0] = temp[0];
+		path[path_index-1-i][1] = temp[1];
 	}
-
-
+	// printf("test\n");
+	// printf("[%d,%d]",path[0][0],path[0][1]);
+	// print_path(path);
 	freeQueue(queue);
 	return;
 }
@@ -422,6 +436,7 @@ void search(double gr[graph_size][4], int path[graph_size][2], int visit_order[s
 		path[1][0]=mouse_loc[0][0];
 		path[1][1]=mouse_loc[0][1];
 	}
+	//print_path(path);
 
  return;
 }

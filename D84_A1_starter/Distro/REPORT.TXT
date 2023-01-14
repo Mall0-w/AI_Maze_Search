@@ -68,7 +68,7 @@ doesn't work, or what problems exist.
 	
 		Complete/Working	Partial		Not done
 
-DFS
+DFS             x
 
 BFS
 
