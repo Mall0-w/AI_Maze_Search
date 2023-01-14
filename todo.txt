@@ -1,0 +1,2 @@
+figure out how to have dfs preserve visited nodes
+currently only solutions are to essentially force it to use the inital dfs instead of recalculating
