@@ -260,15 +260,49 @@ void bfs(double gr[graph_size][4], int path[graph_size][2], int visit_order[size
 }
 
 //helper function used to do dfs on a graph
-void dfs(double gr[graph_size][4], int path[graph_size][2], int visit_order[size_X][size_Y], int cat_loc[10][2], int cats, int cheese_loc[10][2], int cheeses, int mouse_loc[1][2]){
-	//recursively
-	//if goal is a cheese and all cheeses collected
-	//return with some success status
-	//if can't move, return some failure status
+bool dfs(double gr[graph_size][4], int path[graph_size][2], int visit_order[size_X][size_Y], int cat_loc[10][2], int cats, int cheese_loc[10][2], int cheeses, int mouse_grid, int visited[graph_size], int depth, int* iteration){
+	
 
-	//go down options of top->right->bottom->down, modifying them as you go
-	//if success then return
-	return;
+	//if location is out of bounds or lines up with a cat, return false
+	if(mouse_grid < 0 || mouse_grid >= graph_size || coordsInArray(mouse_grid,cat_loc,cats) >= 0 || visited[mouse_grid] || *iteration >= graph_size){
+		return false;
+	}
+	// printf("iteration %d\n",*iteration);
+	
+	//add node to path
+	int mouse_x = (int) mouse_grid % size_X;
+	int mouse_y = (int) mouse_grid / size_Y;
+	path[depth][0] = mouse_x;
+	path[depth][1] = mouse_y;
+	visit_order[mouse_x][mouse_y] = *iteration;
+	*iteration += 1;
+	visited[mouse_grid] = true;
+
+	//if current location is at cheese, then return True
+	if(coordsInArray(mouse_grid,cheese_loc,cheeses) >= 0){
+		printf("found cheese\n");
+		return true;
+	}
+
+	//check all around it clockwise and call functions on those
+	
+	if(gr[mouse_grid][0] == 1 &&  dfs(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,mouse_grid-size_X,visited,depth+1,iteration)){
+		return true;
+	}
+	if(gr[mouse_grid][1] == 1 && dfs(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,mouse_grid+1,visited,depth+1,iteration)){
+		return true;
+	}
+	if(gr[mouse_grid][2] == 1 && dfs(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,mouse_grid+size_X,visited,depth+1,iteration)){
+		return true;
+	}
+	if(gr[mouse_grid][3] == 1 && dfs(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,mouse_grid-1,visited,depth+1,iteration)){
+		return true;
+	}
+
+	//if none of its functions lead to a cheese, return false because this node doesn't
+	path[depth][0] = -1;
+	path[depth][1] = -1;
+	return false;
 }
 
 
@@ -430,6 +464,11 @@ void search(double gr[graph_size][4], int path[graph_size][2], int visit_order[s
 
 	if(mode == 0){
 		bfs(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,mouse_loc);
+	}else if(mode == 1){
+		int visited[graph_size] = {false};
+		int iteration = 0;
+		dfs(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,get_grid_position(mouse_loc[0]),visited,0,&iteration);
+		print_path(path);
 	}else{
 		path[0][0]=mouse_loc[0][0];
 		path[0][1]=mouse_loc[0][1];

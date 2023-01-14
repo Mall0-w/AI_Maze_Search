@@ -70,7 +70,7 @@ doesn't work, or what problems exist.
 
 DFS             x
 
-BFS
+BFS                               x
 
 A*
 
