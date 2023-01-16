@@ -1,3 +1,6 @@
 figure out how to have dfs preserve visited nodes
 currently only solutions are to essentially force it to use the inital dfs instead of recalculating
 dfs currently looping on state change (./AI_search 1525 2 2 2 0)
+
+H* no_kitty needs to be fully optomized
+need to answer report question about h* no kitty

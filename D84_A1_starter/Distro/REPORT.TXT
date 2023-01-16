@@ -46,10 +46,12 @@ but explain carefully when needed.
 
 
 3 .- (2 marks) Describe the heuristic function you used for A* search. Why is this heuristic admissible?
-
+     My hueristic function is simple to go by the manhattan distance between the mouse and the closest cheese.
+     This is admissible because manhattan distance is the amount of nodes that would be travelled if there was a direct
+     path between the mouse and the cheese, therefore it will always be less than or equal to the true cost of the path.
 
 4 .- (1 marks) Explain how your heuristic function accounts for the presence of multiple cheese.
-
+     My hueristic function accounts for multiple cheeses by only considering the one closest to the mouse and ignoring all others.
 
 5 .- (1 marks) Is A* equivalent to BFS for this problem? or is it better/worse? explain your answer based on 
      your observations.
