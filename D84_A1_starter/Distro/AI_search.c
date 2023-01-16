@@ -44,12 +44,14 @@
 
 #include "AI_search.h"
 #include "stdbool.h"
+#define INT_MAX 2147483647;
 
 /**
  * defining nodes and queues for linked lists
 */
 typedef struct Node{
 	int value;
+	int priority;
 	Node* next;
 }Node;
 
@@ -57,7 +59,6 @@ typedef struct Queue{
 	Node* first;
 	Node* last;
 } Queue;
-
 /**
  * defining basic functions for queue functionality
 */
@@ -81,7 +82,15 @@ Node* createNode(int value){
 	}
 	newNode->value = value;
 	newNode->next = NULL;
+	newNode->priority = 0;
 
+	return newNode;
+}
+
+Node* createPriorityNode(int value, int priority){
+	Node* newNode = createNode(value);
+	newNode->priority = priority;
+	// printf("newNode priority %d\n",newNode->priority);
 	return newNode;
 }
 
@@ -99,6 +108,42 @@ void enQueue(Queue* queue, int value){
 	return;
 }
 
+//enqueue into priority queue by sorting each time something is inserted into the queue
+//slow but i didn't want to implement something like a min heap
+void priorityEnQueue(Queue* queue, int value, int priority){
+	Node* newNode = createPriorityNode(value, priority);
+	if(queue->first == NULL){
+		queue->first = newNode;
+		queue->last = newNode;
+		return;
+	}
+	//otherwise insert into linked list and sort it
+
+	if(newNode->priority <= queue->first->priority){
+		newNode->next = queue->first;
+		queue->first = newNode;
+		return;
+	}
+
+	Node* head = queue->first;
+	//note prev should never be null since we always check to see if it should be inserted
+	//at head first
+	Node* prev = NULL;
+	while(head != NULL){
+		if(newNode->priority <= head->priority){
+			prev->next = newNode;
+			newNode->next = head;
+			return;
+		}
+		prev = head;
+		head = head->next;
+	}
+	//if iterated through entire list then it is the new last element
+	prev->next = newNode;
+	queue->last = newNode;
+	return;
+}
+
 int deQueue(Queue* queue){
 	if(queue->first == NULL){
 		printf("Nothing in queue");
@@ -110,6 +155,7 @@ int deQueue(Queue* queue){
 		queue->last = NULL;
 	}
 	int val = first->value;
+	//printf("dequeing priority %d\n",first->priority);
 	free(first);
 	return val;
 }
@@ -166,6 +212,7 @@ void bfs(double gr[graph_size][4], int path[graph_size][2], int visit_order[size
 	int cheese_index = -1;
 	int mouse_grid = get_grid_position(mouse_loc[0]);
 	int predecessor[graph_size];
+
 	int iteration = 0;
 	
 	//initalizing the predecessor arr
@@ -305,10 +352,178 @@ bool dfs(double gr[graph_size][4], int path[graph_size][2], int visit_order[size
 	return false;
 }
 
+//want to do ucs (need priority queue)
+void heuristic_search(double gr[graph_size][4], int path[graph_size][2], int visit_order[size_X][size_Y], int cat_loc[10][2], int cats, int cheese_loc[10][2], int cheeses, int mouse_loc[1][2], int (*heuristic)(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_loc[1][2], int cats, int cheeses, double gr[graph_size][4])){
 
-//helper function used to do a* on a graph
-void a_star(){
+	//initalize priority queue
+	//add starting node to priority queue
+	printf("creating priority queue\n");
+	Queue* priorityQueue = createQueue();
+	int mouse_grid = get_grid_position(mouse_loc[0]);
+	printf("inital %d\n",mouse_grid);
+	priorityEnQueue(priorityQueue,mouse_grid,1);
+
+	printf("testing queue value: %d, priority: %d, next is null %d\n",priorityQueue->first->value,priorityQueue->first->priority,priorityQueue->first->next == NULL);
+
+	//while priority queue has an entry
+	int cheese_index = -1;
+	int iteration = 0;
+
+	int predecessor[graph_size];
+
+	//initalizing the predecessor arr
+	for(int i = 0; i < graph_size; i++){
+		predecessor[i] = -1;
+	}
+
+	while(priorityQueue->first != NULL){
+
+		//pop off from priority queue
+		int curr_pos = deQueue(priorityQueue);
+		// printf("dequeued %d\n",curr_pos);
+		int curr_x = curr_pos % size_X;
+		int curr_y = curr_pos / size_Y;
+		visit_order[curr_x][curr_y] = iteration;
+		//if its a cheese then you've found the cheese
+		cheese_index = coordsInArray(curr_pos,cheese_loc,cheeses);
+		if(cheese_index >= 0){
+			printf("cheese has been found!\n");
+			break;
+		}
+
+		
+		//otherwise see if other nodes are valid and put them in the priority queue based off their heuristic
+
+		if(gr[curr_pos][0] == 1 && coordsInArray(curr_pos-size_X,cat_loc,cats) < 0 && curr_pos - size_X >= 0 && predecessor[curr_pos-size_X] == -1){
+			int new_pos = curr_pos-size_X;
+			predecessor[new_pos] = curr_pos;
+			priorityEnQueue(priorityQueue, new_pos, heuristic(new_pos % size_X,(int)new_pos / size_Y,cat_loc,cheese_loc,mouse_loc,cats,cheeses,gr));
+		}
+		if(gr[curr_pos][1] == 1 && coordsInArray(curr_pos+1,cat_loc,cats) < 0 && curr_pos+1 < graph_size  && predecessor[curr_pos+1] == -1){
+			int new_pos = curr_pos+1;
+			predecessor[new_pos] = curr_pos;
+			priorityEnQueue(priorityQueue, new_pos, heuristic(new_pos % size_X,(int)new_pos / size_Y,cat_loc,cheese_loc,mouse_loc,cats,cheeses,gr));
+		}
+		if(gr[curr_pos][2] == 1 && coordsInArray(curr_pos+size_X,cat_loc,cats) < 0 && curr_pos + size_X < graph_size && predecessor[curr_pos+size_X] == -1){
+			int new_pos = curr_pos+size_X;
+			predecessor[new_pos] = curr_pos;
+			priorityEnQueue(priorityQueue, new_pos, heuristic(new_pos % size_X,(int)new_pos / size_Y,cat_loc,cheese_loc,mouse_loc,cats,cheeses,gr));
+		}
+		if(gr[curr_pos][3] == 1 && coordsInArray(curr_pos-1,cat_loc,cats) < 0 && curr_pos -1 >= 0  && predecessor[curr_pos-1] == -1){
+			int new_pos = curr_pos-1;
+			predecessor[new_pos] = curr_pos;
+			priorityEnQueue(priorityQueue, new_pos, heuristic(new_pos % size_X,(int)new_pos / size_Y,cat_loc,cheese_loc,mouse_loc,cats,cheeses,gr));
+		}
+
+		iteration++;
+		
+	}
+	//if don't have a cheese index then path wasn't found
+	if (cheese_index < 0){
+		printf("no cheese found\n");
+		return;
+	}
+	
+	//otherwise need to backtrack the path
+
+	int curr_cords = get_grid_position(cheese_loc[cheese_index]);
+	int path_index = 0;
+	while(curr_cords != mouse_grid){
+		//add the current cords to the path (by operating on its grid value)
+		//then go to its predessecor
+		path[path_index][0] = curr_cords % size_X;
+		path[path_index][1] = (int) curr_cords / size_Y;
+		// printf("[%d,%d]\n",curr_cords % size_X,(int) curr_cords / size_Y);
+		// printf("predessecor %d\n",predecessor[curr_cords]);
+
+		curr_cords = predecessor[curr_cords];
+		path_index++;
+	}
+	path[path_index][0] = mouse_loc[0][0];
+	path[path_index][1] = mouse_loc[0][1];
+	path_index++;
+	// printf("before reversing, %d\n", path_index);
+	// print_path(path);
+
+	//first path_index+1 elements should have the path in reverse order, so just reverse those elements
+	//path_index = len(path)
+
+	for(int i = 0; i < (path_index) / 2; i++){
+		int temp[2] = {path[i][0], path[i][1]};
+		path[i][0] = path[path_index-1-i][0];
+		path[i][1] = path[path_index-1-i][1];
+		path[path_index-1-i][0] = temp[0];
+		path[path_index-1-i][1] = temp[1];
+	}
+	//free the queue
+
+	freeQueue(priorityQueue);
 	return;
+
+}
+
+int H_cost(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_loc[1][2], int cats, int cheeses, double gr[graph_size][4])
+{
+ /*
+	This function computes and returns the heuristic cost for location x,y.
+	As discussed in lecture, this means estimating the cost of getting from x,y to the goal. 
+	The goal is cheese. Which cheese is up to you.
+	Whatever you code here, your heuristic must be admissible.
+
+	Input arguments:
+
+		x,y - Location for which this function will compute a heuristic search cost
+		cat_loc - Cat locations
+		cheese_loc - Cheese locations
+		mouse_loc - Mouse location
+		cats - # of cats
+		cheeses - # of cheeses
+		gr - The graph's adjacency list for the maze
+
+		These arguments are as described in the search() function above
+ */
+
+	/**
+	 * have each cost be manhattan distance to closest cheese (can figure out better algo later)
+	*/
+	// printf("heurisitc called\n");
+	int min_distance = INT_MAX;
+	for(int i = 0; i < cheeses; i++){
+		int new_dist = (abs(x - cheese_loc[i][0]) + abs(y - cheese_loc[i][1]));
+		if (new_dist < min_distance){
+			min_distance = new_dist;
+		}
+	}
+	return min_distance;
+}
+
+int H_cost_nokitty(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_loc[1][2], int cats, int cheeses, double gr[graph_size][4])
+{
+ /*
+	This function computes and returns the heuristic cost for location x,y.
+	As discussed in lecture, this means estimating the cost of getting from x,y to the goal. 
+	The goal is cheese. 
+
+	However - this time you want your heuristic function to help the mouse avoid being eaten.
+	Therefore: You have to somehow incorporate knowledge of the cats' locations into your
+	heuristic cost estimate. How well you do this will determine how well your mouse behaves
+	and how good it is at escaping kitties.
+
+	This heuristic *does not have to* be admissible.
+
+	Input arguments have the same meaning as in the H_cost() function above.
+ */
+
+	//want to maximize amounts of moves it takes cats to get to mouse
+	//calculate sum of amount of moves it takes to get to mouse however, have them exponentially
+	//more expensive as cats get closer to mouse
+	//if going to collide with a cat, make it as expensive as possible
+	int sum = 0;
+	for(int i = 0; i < cats; i++){
+		
+	}
+
+ return(1);		// <-- Evidently you will need to update this.
 }
 
 void search(double gr[graph_size][4], int path[graph_size][2], int visit_order[size_X][size_Y], int cat_loc[10][2], int cats, int cheese_loc[10][2], int cheeses, int mouse_loc[1][2], int mode, int (*heuristic)(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_loc[1][2], int cats, int cheeses, double gr[graph_size][4]))
@@ -469,6 +684,10 @@ void search(double gr[graph_size][4], int path[graph_size][2], int visit_order[s
 		int iteration = 0;
 		dfs(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,get_grid_position(mouse_loc[0]),visited,0,&iteration);
 		print_path(path);
+	}else if(mode == 2){
+		heuristic_search(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,mouse_loc,&H_cost);
+	}else if(mode == 3){
+		heuristic_search(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,mouse_loc,&H_cost_nokitty);
 	}else{
 		path[0][0]=mouse_loc[0][0];
 		path[0][1]=mouse_loc[0][1];
@@ -478,60 +697,5 @@ void search(double gr[graph_size][4], int path[graph_size][2], int visit_order[s
 	//print_path(path);
 
  return;
-}
-
-int H_cost(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_loc[1][2], int cats, int cheeses, double gr[graph_size][4])
-{
- /*
-	This function computes and returns the heuristic cost for location x,y.
-	As discussed in lecture, this means estimating the cost of getting from x,y to the goal. 
-	The goal is cheese. Which cheese is up to you.
-	Whatever you code here, your heuristic must be admissible.
-
-	Input arguments:
-
-		x,y - Location for which this function will compute a heuristic search cost
-		cat_loc - Cat locations
-		cheese_loc - Cheese locations
-		mouse_loc - Mouse location
-		cats - # of cats
-		cheeses - # of cheeses
-		gr - The graph's adjacency list for the maze
-
-		These arguments are as described in the search() function above
- */
-
-	//have the cost be the minimum length between x,y and a cheese
-
- return(1);		// <-- Evidently you will need to update this.
-}
-
-int H_cost_nokitty(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_loc[1][2], int cats, int cheeses, double gr[graph_size][4])
-{
- /*
-	This function computes and returns the heuristic cost for location x,y.
-	As discussed in lecture, this means estimating the cost of getting from x,y to the goal. 
-	The goal is cheese. 
-
-	However - this time you want your heuristic function to help the mouse avoid being eaten.
-	Therefore: You have to somehow incorporate knowledge of the cats' locations into your
-	heuristic cost estimate. How well you do this will determine how well your mouse behaves
-	and how good it is at escaping kitties.
-
-	This heuristic *does not have to* be admissible.
-
-	Input arguments have the same meaning as in the H_cost() function above.
- */
-
-	//want to maximize amounts of moves it takes cats to get to mouse
-	//calculate sum of amount of moves it takes to get to mouse however, have them exponentially
-	//more expensive as cats get closer to mouse
-	//if going to collide with a cat, make it as expensive as possible
-	int sum = 0;
-	for(int i = 0; i < cats; i++){
-		
-	}
-
- return(1);		// <-- Evidently you will need to update this.
 }
 
