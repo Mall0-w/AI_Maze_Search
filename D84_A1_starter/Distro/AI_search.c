@@ -160,19 +160,6 @@ int deQueue(Queue* queue){
 	return val;
 }
 
-Node* priDeQueue(Queue* queue){
-	if(queue->first == NULL){
-		printf("Nothing in queue");
-		return NULL;
-	}
-	Node* first = queue->first;
-	queue->first = queue->first->next;
-	if(queue->first == NULL){
-		queue->last = NULL;
-	}
-	return first;
-}
-
 void freeQueue(Queue* queue){
 	Node* first = queue->first;
 	Node* temp = NULL;
@@ -370,19 +357,20 @@ void heuristic_search(double gr[graph_size][4], int path[graph_size][2], int vis
 
 	//initalize priority queue
 	//add starting node to priority queue
-	printf("creating priority queue\n");
+	//printf("creating priority queue\n");
 	Queue* priorityQueue = createQueue();
 	int mouse_grid = get_grid_position(mouse_loc[0]);
-	printf("inital %d\n",mouse_grid);
+	//printf("inital %d\n",mouse_grid);
 	priorityEnQueue(priorityQueue,mouse_grid,1);
 
-	printf("testing queue value: %d, priority: %d, next is null %d\n",priorityQueue->first->value,priorityQueue->first->priority,priorityQueue->first->next == NULL);
+	//printf("testing queue value: %d, priority: %d, next is null %d\n",priorityQueue->first->value,priorityQueue->first->priority,priorityQueue->first->next == NULL);
 
 	//while priority queue has an entry
 	int cheese_index = -1;
 	int iteration = 0;
 
 	int predecessor[graph_size];
+	int distances[graph_size] = {0};
 
 	//initalizing the predecessor arr
 	for(int i = 0; i < graph_size; i++){
@@ -392,10 +380,7 @@ void heuristic_search(double gr[graph_size][4], int path[graph_size][2], int vis
 	while(priorityQueue->first != NULL){
 
 		//pop off from priority queue
-		Node* curr = priDeQueue(priorityQueue);
-		int curr_pos = curr->value;
-		int curr_pri = curr->priority;
-		free(curr);
+		int curr_pos = deQueue(priorityQueue);
 		// printf("dequeued %d\n",curr_pos);
 		int curr_x = curr_pos % size_X;
 		int curr_y = curr_pos / size_Y;
@@ -412,23 +397,27 @@ void heuristic_search(double gr[graph_size][4], int path[graph_size][2], int vis
 
 		if(gr[curr_pos][0] == 1 && coordsInArray(curr_pos-size_X,cat_loc,cats) < 0 && curr_pos - size_X >= 0 && predecessor[curr_pos-size_X] == -1){
 			int new_pos = curr_pos-size_X;
+			distances[new_pos] = distances[curr_pos] + 1;
 			predecessor[new_pos] = curr_pos;
-			priorityEnQueue(priorityQueue, new_pos, curr_pri + heuristic(new_pos % size_X,(int)new_pos / size_Y,cat_loc,cheese_loc,mouse_loc,cats,cheeses,gr));
+			priorityEnQueue(priorityQueue, new_pos, distances[curr_pos] + heuristic(new_pos % size_X,(int)new_pos / size_Y,cat_loc,cheese_loc,mouse_loc,cats,cheeses,gr));
 		}
 		if(gr[curr_pos][1] == 1 && coordsInArray(curr_pos+1,cat_loc,cats) < 0 && curr_pos+1 < graph_size  && predecessor[curr_pos+1] == -1){
 			int new_pos = curr_pos+1;
+			distances[new_pos] = distances[curr_pos] + 1;
 			predecessor[new_pos] = curr_pos;
-			priorityEnQueue(priorityQueue, new_pos, curr_pri + heuristic(new_pos % size_X,(int)new_pos / size_Y,cat_loc,cheese_loc,mouse_loc,cats,cheeses,gr));
+			priorityEnQueue(priorityQueue, new_pos, distances[curr_pos] + heuristic(new_pos % size_X,(int)new_pos / size_Y,cat_loc,cheese_loc,mouse_loc,cats,cheeses,gr));
 		}
 		if(gr[curr_pos][2] == 1 && coordsInArray(curr_pos+size_X,cat_loc,cats) < 0 && curr_pos + size_X < graph_size && predecessor[curr_pos+size_X] == -1){
 			int new_pos = curr_pos+size_X;
+			distances[new_pos] = distances[curr_pos] + 1;
 			predecessor[new_pos] = curr_pos;
-			priorityEnQueue(priorityQueue, new_pos, curr_pri + heuristic(new_pos % size_X,(int)new_pos / size_Y,cat_loc,cheese_loc,mouse_loc,cats,cheeses,gr));
+			priorityEnQueue(priorityQueue, new_pos, distances[curr_pos] + heuristic(new_pos % size_X,(int)new_pos / size_Y,cat_loc,cheese_loc,mouse_loc,cats,cheeses,gr));
 		}
 		if(gr[curr_pos][3] == 1 && coordsInArray(curr_pos-1,cat_loc,cats) < 0 && curr_pos -1 >= 0  && predecessor[curr_pos-1] == -1){
 			int new_pos = curr_pos-1;
+			distances[new_pos] = distances[curr_pos] + 1;
 			predecessor[new_pos] = curr_pos;
-			priorityEnQueue(priorityQueue, new_pos, curr_pri + heuristic(new_pos % size_X,(int)new_pos / size_Y,cat_loc,cheese_loc,mouse_loc,cats,cheeses,gr));
+			priorityEnQueue(priorityQueue, new_pos, distances[curr_pos] + heuristic(new_pos % size_X,(int)new_pos / size_Y,cat_loc,cheese_loc,mouse_loc,cats,cheeses,gr));
 		}
 
 		iteration++;
@@ -608,14 +597,8 @@ int H_cost_nokitty(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int 
 	float sum = 0;
 	int cheese_cost = H_cost(x,y,cat_loc,cheese_loc,mouse_loc,cats,cheeses,gr);
 	for(int i = 0; i<cats; i++){
-		//get manhattan distance
-		int manhattan_dist = abs(x-cat_loc[i][0]) + abs(y-cat_loc[i][1]);
-		//want it to be exponentially more expensive the closer the cat is and also want it
-		//to outweight the fastest path
-		//cost to cheese / manhattan distance to cat
-		int cat_cost =  predict_cat_cost(gr,(cat_loc+i),mouse_loc);
-		
-		sum += cheese_cost + (cat_cost * cat_cost);
+
+		continue;
 
 	}
 	return (int) sum;
