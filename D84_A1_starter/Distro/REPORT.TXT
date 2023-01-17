@@ -61,6 +61,15 @@ but explain carefully when needed.
 6 .- (2 marks) Describe your heuristic function for A*-nokitty. How does it work? what factors are considered
      into the cost function? is it admissible (yes/no and why)?
 
+     My heuristic function goes over each cat and finds their manhattan distance to the mouse.  It then takes the mouse's manhattan
+     distance to the cheese, squares it, adds the square of the number of walls around the mouse (to prevent it from being trapped),
+     then divides it by the square of the cat's manhattan distance (using inverse square law with the cat to discourgae the mouse 
+     from moving closer to it).  It sums this result of (dist(cheese)^2+num_walls^2)/dist(cat)^2 for each cat and returns that as its heurisitc.
+
+     This heurisitc is not admissible becuase the weight of a path can greatly outweigh its actual cost. for example, if there is one cat,
+     and no walls around the mouse then the heurisitc will say it will take manhattan_dist(cheese)^2 to get to the cheese which, if there is a
+     straight path from the mouse to the cheese, would overshoot the actual cost making it inadmissable.
+
 7 .- (2 marks) What is the largest limitation of the search algorithms implemented in this assignment?
      (i.e. is there anything we are missing that could lead to a smarter mouse?) - this is
      a more or less open question, but we talked about it in lecture!
@@ -83,7 +92,7 @@ A*             X
 
 H              X
 
-H_no_cats                         X
+H_no_cats      X
 
 _____________________________________________________
 

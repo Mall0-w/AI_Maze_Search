@@ -502,72 +502,6 @@ int H_cost(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_lo
 	return min_distance;
 }
 
-int predict_cat_cost(double gr[graph_size][4],int cat_loc[1][2], int mouse_loc[1][2]){
-	//start a queue
-	//while queue is not empty and they are still cheeses
-	//continue god's work
-
-	int mouse_index = -1;
-	int cat_grid = get_grid_position(mouse_loc[0]);
-	int mouse_grid = get_grid_position(mouse_loc[0]);
-	int curr_pos = cat_grid;
-	int predecessor[graph_size];
-
-	int iteration = 0;
-	
-	//initalizing the predecessor arr
-	for(int i = 0; i < graph_size; i++){
-		predecessor[i] = -1;
-	}
-
-	Queue* queue = createQueue();
-	//queuing the current mouse position
-	enQueue(queue,cat_grid); 
-
-	while(queue != NULL && queue->first != NULL && curr_pos != mouse_grid){
-		//dequeue position
-		//printf("deQueue\n");
-		curr_pos = deQueue(queue);
-
-		if(gr[curr_pos][0] == 1 && curr_pos - size_X >= 0 && predecessor[curr_pos-size_X] == -1){
-			//if one higher is possible, then add current_postition up on (minus y) to queue
-			predecessor[curr_pos-size_X] = curr_pos;
-			enQueue(queue,curr_pos - size_X);
-			// printf("something got queued");
-		}
-		if(gr[curr_pos][1] == 1 && curr_pos+1 < graph_size  && predecessor[curr_pos+1] == -1){
-			predecessor[curr_pos+1] = curr_pos;
-			enQueue(queue,curr_pos + 1);
-			// printf("something got queued");
-		}
-		if(gr[curr_pos][2] == 1 && curr_pos + size_X < graph_size && predecessor[curr_pos+size_X] == -1){
-			predecessor[curr_pos+size_X] = curr_pos;
-			enQueue(queue,curr_pos + size_X);
-			// printf("something got queued");
-		}
-		if(gr[curr_pos][3] == 1 && curr_pos -1 >= 0  && predecessor[curr_pos-1] == -1){
-			predecessor[curr_pos-1] = curr_pos;
-			enQueue(queue, curr_pos - 1);
-			// printf("something got queued");
-		}
-		//printf("iterate\n");
-		iteration++;
-	}
-
-	//if didn't find cheese index just return
-	if(mouse_index == -1){
-		return INT_MAX;
-	}
-	int curr_cords = predecessor[curr_pos];
-	//otherwise go through predessecors to get path in reverse order then reverse it
-	int path_length = 1;
-	while(curr_cords != cat_grid){
-		path_length ++;
-	}
-	freeQueue(queue);
-	return path_length;
-}
-
 int H_cost_nokitty(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_loc[1][2], int cats, int cheeses, double gr[graph_size][4])
 {
  /*
@@ -595,11 +529,20 @@ int H_cost_nokitty(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int 
 
 	//get heursitics for shortest path but add onto it the cost of the kitties;
 	float sum = 0;
+	int arb_const = 100;
+	//printf("no kitty called\n");
 	int cheese_cost = H_cost(x,y,cat_loc,cheese_loc,mouse_loc,cats,cheeses,gr);
 	for(int i = 0; i<cats; i++){
-
-		continue;
-
+		int predicted = abs(cat_loc[i][0] - x) + abs(cat_loc[i][1] - y);
+		//make the mouse scared of the cats by getting distance to cats and using inverse square law to pick best route
+		//also add a bonus for the amount of deadends around the mouse
+		int end_mod = 0;
+		for(int i = 0; i < 4; i++){
+			if(gr[y*size_X + x][i] == 0){
+				end_mod++; 
+			}
+		}
+		sum += (pow(cheese_cost,2) + pow(end_mod,2)) / pow(predicted,2);
 	}
 	return (int) sum;
 }
@@ -763,9 +706,7 @@ void search(double gr[graph_size][4], int path[graph_size][2], int visit_order[s
 		dfs(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,get_grid_position(mouse_loc[0]),visited,0,&iteration);
 		print_path(path);
 	}else if(mode == 2){
-		heuristic_search(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,mouse_loc,&H_cost);
-	}else if(mode == 3){
-		heuristic_search(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,mouse_loc,&H_cost_nokitty);
+		heuristic_search(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,mouse_loc,heuristic);
 	}else{
 		path[0][0]=mouse_loc[0][0];
 		path[0][1]=mouse_loc[0][1];
