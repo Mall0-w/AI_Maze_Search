@@ -84,9 +84,9 @@ doesn't work, or what problems exist.
 	
 		Complete/Working	Partial		Not done
 
-DFS             x
+DFS            x
 
-BFS                               x
+BFS            x                  
 
 A*             X 
 
