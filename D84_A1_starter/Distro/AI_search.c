@@ -876,6 +876,13 @@ void search(double gr[graph_size][4], int path[graph_size][2], int visit_order[s
 		int iteration = 0;
 		dfs(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,get_grid_position(mouse_loc[0]),visited,0,&iteration);
 
+		if(path[0][0] == -1 || path[0][1] == -1){
+			path[0][0] == mouse_loc[0][0];
+			path[0][1] == mouse_loc[0][1];
+			path[1][0] == mouse_loc[0][0];
+			path[1][1] == mouse_loc[0][1];
+		}
+
 		//below is an attempt to get around the fact that bfs has its visited nodes wiped whenever search is called,
 		//READ AT OWN RISK
 
