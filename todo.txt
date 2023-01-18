@@ -5,3 +5,7 @@ dfs currently looping on state change (./AI_search 1525 1 1 2 0)
 need to find a way to make h* nokitty more efficient, like in regards to cat's closeness to cheese (see kitty brainstorm)
 
 Still need to test for memory leaks
+
+reports needs to be discussed
+
+report, ai_search and autotester_id needs to be filled out
