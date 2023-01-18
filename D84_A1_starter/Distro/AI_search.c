@@ -75,6 +75,7 @@ Queue* createQueue(){
 	return newQueue;
 }
 
+//defining basic boilerplate for a Node
 Node* createNode(int value){
 	Node* newNode = (Node*)calloc(1, sizeof(Node));
 	if(newNode == NULL){
@@ -88,10 +89,10 @@ Node* createNode(int value){
 	return newNode;
 }
 
+//defining a boilerplate for creating a node w/ priority
 Node* createPriorityNode(int value, int priority){
 	Node* newNode = createNode(value);
 	newNode->priority = priority;
-	// printf("newNode priority %d\n",newNode->priority);
 	return newNode;
 }
 
@@ -100,12 +101,10 @@ void enQueue(Queue* queue, int value){
 	if(queue->first == NULL){
 		queue->first = newNode;
 		queue->last = newNode;
-		// printf("queued %d\n",value);
 		return;
 	}
 	queue->last->next = newNode;
 	queue->last = newNode;
-	// printf("queued %d\n",value);
 	return;
 }
 
@@ -156,7 +155,6 @@ int deQueue(Queue* queue){
 		queue->last = NULL;
 	}
 	int val = first->value;
-	//printf("dequeing priority %d\n",first->priority);
 	free(first);
 	return val;
 }
@@ -174,6 +172,7 @@ void freeQueue(Queue* queue){
 	return;
 }
 
+//helper function used to print a path
 void print_path(int (*path)[2]){
 	for(int i = 0; i < graph_size; i++){
 		if(path[i][0] == -1 || path[i][1] == -1){
@@ -187,20 +186,17 @@ void print_path(int (*path)[2]){
 
 //helper function to get grid position from cords
 int get_grid_position(int coords[2]){
-	// printf("converting grid [%d,%d] to %d\n",coords[0],coords[1],(coords[0] + (size_X * coords[1])));
 	return (coords[0] + (size_X * coords[1]));
 }
 
 //Helper function used to determine if a pair of coordinates are in an array
+//if they are in array, return its index, otherwise return -1
 int coordsInArray(int coords ,int (*array)[2],int size){
-	//printf("cords in array\n");
 	for(int i = 0; i < size; i++){
 		if (coords == get_grid_position(*(array+i))){
-	//		printf("cords found\n");
 			return i;
 		}
 	}
-	//printf("cords not found\n");
 	return -1;
 }
 
@@ -212,6 +208,7 @@ void bfs(double gr[graph_size][4], int path[graph_size][2], int visit_order[size
 
 	int cheese_index = -1;
 	int mouse_grid = get_grid_position(mouse_loc[0]);
+	//list to keep track of path traversed (predessecor[index] points to whatever index's predessecor is)
 	int predecessor[graph_size];
 
 	int iteration = 0;
@@ -225,48 +222,37 @@ void bfs(double gr[graph_size][4], int path[graph_size][2], int visit_order[size
 	//queuing the current mouse position
 	enQueue(queue,mouse_grid); 
 
+	//while queue is full and haven't found cheese
 	while(queue != NULL && queue->first != NULL && cheese_index < 0){
 		//dequeue position
-		//printf("deQueue\n");
 		int curr_pos = deQueue(queue);
-		//printf("see if cheese\n");
 		cheese_index = coordsInArray(curr_pos,cheese_loc,cheeses);
 		//marking off order visited
 		visit_order[curr_pos % size_X][(int) curr_pos / size_Y] = iteration;
 
 		//check various grid locations
-		//printf("cats\n");
-		// printf("curr_pos: %d\n",curr_pos);
-		// printf("testing %d\n", (int) gr[curr_pos][0] == 1);
-		// printf("will collide with cat %d\n",(int) ! (coordsInArray(curr_pos-size_X,cat_loc,cats) < 0));
-		// printf("out of range %d\n",(int)curr_pos - size_X >= 0);
-		// printf("visited %d\n",predecessor[curr_pos-size_X] == -1);
 		if(gr[curr_pos][0] == 1 && coordsInArray(curr_pos-size_X,cat_loc,cats) < 0 && curr_pos - size_X >= 0 && predecessor[curr_pos-size_X] == -1){
 			//if one higher is possible, then add current_postition up on (minus y) to queue
 			predecessor[curr_pos-size_X] = curr_pos;
 			enQueue(queue,curr_pos - size_X);
-			// printf("something got queued");
 		}
 		if(gr[curr_pos][1] == 1 && coordsInArray(curr_pos+1,cat_loc,cats) < 0 && curr_pos+1 < graph_size  && predecessor[curr_pos+1] == -1){
 			predecessor[curr_pos+1] = curr_pos;
 			enQueue(queue,curr_pos + 1);
-			// printf("something got queued");
 		}
 		if(gr[curr_pos][2] == 1 && coordsInArray(curr_pos+size_X,cat_loc,cats) < 0 && curr_pos + size_X < graph_size && predecessor[curr_pos+size_X] == -1){
 			predecessor[curr_pos+size_X] = curr_pos;
 			enQueue(queue,curr_pos + size_X);
-			// printf("something got queued");
 		}
 		if(gr[curr_pos][3] == 1 && coordsInArray(curr_pos-1,cat_loc,cats) < 0 && curr_pos -1 >= 0  && predecessor[curr_pos-1] == -1){
 			predecessor[curr_pos-1] = curr_pos;
 			enQueue(queue, curr_pos - 1);
-			// printf("something got queued");
 		}
-		//printf("iterate\n");
 		iteration++;
 	}
 
 	//if didn't find cheese index just return
+	//and have mouse stand still
 	if(cheese_index == -1){
 		printf("no cheese found\n");
 		path[0][0] = mouse_loc[0][0];
@@ -281,7 +267,6 @@ void bfs(double gr[graph_size][4], int path[graph_size][2], int visit_order[size
 		}
 		visit_order[mouse_loc[0][0]][mouse_loc[0][1]] = 1;
 		return;
-		return;
 	}
 	//otherwise go through predessecors to get path in reverse order then reverse it
 	int curr_cords = get_grid_position(cheese_loc[cheese_index]);
@@ -291,8 +276,6 @@ void bfs(double gr[graph_size][4], int path[graph_size][2], int visit_order[size
 		//then go to its predessecor
 		path[path_index][0] = curr_cords % size_X;
 		path[path_index][1] = (int) curr_cords / size_Y;
-		// printf("[%d,%d]\n",curr_cords % size_X,(int) curr_cords / size_Y);
-		// printf("predessecor %d\n",predecessor[curr_cords]);
 
 		curr_cords = predecessor[curr_cords];
 		path_index++;
@@ -300,11 +283,8 @@ void bfs(double gr[graph_size][4], int path[graph_size][2], int visit_order[size
 	path[path_index][0] = mouse_loc[0][0];
 	path[path_index][1] = mouse_loc[0][1];
 	path_index++;
-	// printf("before reversing, %d\n", path_index);
-	// print_path(path);
 
-	//first path_index+1 elements should have the path in reverse order, so just reverse those elements
-	//path_index = len(path)
+	//first path_index elements should have the path in reverse order, so just reverse those elements
 
 	for(int i = 0; i < (path_index) / 2; i++){
 		int temp[2] = {path[i][0], path[i][1]};
@@ -313,9 +293,7 @@ void bfs(double gr[graph_size][4], int path[graph_size][2], int visit_order[size
 		path[path_index-1-i][0] = temp[0];
 		path[path_index-1-i][1] = temp[1];
 	}
-	// printf("test\n");
-	// printf("[%d,%d]",path[0][0],path[0][1]);
-	// print_path(path);
+	
 	freeQueue(queue);
 	return;
 }
@@ -328,7 +306,6 @@ bool dfs(double gr[graph_size][4], int path[graph_size][2], int visit_order[size
 	if(mouse_grid < 0 || mouse_grid >= graph_size || coordsInArray(mouse_grid,cat_loc,cats) >= 0 || visited[mouse_grid]){
 		return false;
 	}
-	// printf("iteration %d\n",*iteration);
 	
 	//add node to path
 	int mouse_x = (int) mouse_grid % size_X;
@@ -346,7 +323,7 @@ bool dfs(double gr[graph_size][4], int path[graph_size][2], int visit_order[size
 	}
 
 	//check all around it clockwise and call functions on those
-	
+	//if dfs can be completed on those stop search otherwise continue clockwise
 	if(gr[mouse_grid][0] == 1 &&  dfs(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,mouse_grid-size_X,visited,depth+1,iteration)){
 		return true;
 	}
@@ -361,25 +338,20 @@ bool dfs(double gr[graph_size][4], int path[graph_size][2], int visit_order[size
 	}
 
 	//if none of its functions lead to a cheese, return false because this node doesn't
+	//also make sure to reset the path
 	path[depth][0] = -1;
 	path[depth][1] = -1;
 	return false;
 }
 
-//want to do ucs (need priority queue)
 void heuristic_search(double gr[graph_size][4], int path[graph_size][2], int visit_order[size_X][size_Y], int cat_loc[10][2], int cats, int cheese_loc[10][2], int cheeses, int mouse_loc[1][2], int (*heuristic)(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_loc[1][2], int cats, int cheeses, double gr[graph_size][4])){
 
 	//initalize priority queue
 	//add starting node to priority queue
-	//printf("creating priority queue\n");
 	Queue* priorityQueue = createQueue();
 	int mouse_grid = get_grid_position(mouse_loc[0]);
-	//printf("inital %d\n",mouse_grid);
 	priorityEnQueue(priorityQueue,mouse_grid,1);
 
-	//printf("testing queue value: %d, priority: %d, next is null %d\n",priorityQueue->first->value,priorityQueue->first->priority,priorityQueue->first->next == NULL);
-
-	//while priority queue has an entry
 	int cheese_index = -1;
 	int iteration = 0;
 
@@ -391,6 +363,7 @@ void heuristic_search(double gr[graph_size][4], int path[graph_size][2], int vis
 		predecessor[i] = -1;
 	}
 
+	//while priority queue has an entry
 	while(priorityQueue->first != NULL){
 
 		//pop off from priority queue
@@ -463,8 +436,6 @@ void heuristic_search(double gr[graph_size][4], int path[graph_size][2], int vis
 		//then go to its predessecor
 		path[path_index][0] = curr_cords % size_X;
 		path[path_index][1] = (int) curr_cords / size_Y;
-		// printf("[%d,%d]\n",curr_cords % size_X,(int) curr_cords / size_Y);
-		// printf("predessecor %d\n",predecessor[curr_cords]);
 
 		curr_cords = predecessor[curr_cords];
 		path_index++;
@@ -472,11 +443,8 @@ void heuristic_search(double gr[graph_size][4], int path[graph_size][2], int vis
 	path[path_index][0] = mouse_loc[0][0];
 	path[path_index][1] = mouse_loc[0][1];
 	path_index++;
-	// printf("before reversing, %d\n", path_index);
-	// print_path(path);
 
-	//first path_index+1 elements should have the path in reverse order, so just reverse those elements
-	//path_index = len(path)
+	//first path_index elements should have the path in reverse order, so just reverse those elements
 
 	for(int i = 0; i < (path_index) / 2; i++){
 		int temp[2] = {path[i][0], path[i][1]};
@@ -516,7 +484,6 @@ int H_cost(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_lo
 	/**
 	 * have each cost be manhattan distance to closest cheese (can figure out better algo later)
 	*/
-	// printf("heurisitc called\n");
 	int min_distance = INT_MAX;
 	for(int i = 0; i < cheeses; i++){
 		int new_dist = (abs(x - cheese_loc[i][0]) + abs(y - cheese_loc[i][1]));
@@ -573,14 +540,10 @@ int H_cost_nokitty(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int 
 			}
 		}
 		
-		//divide it by the cat_dist/2 since dist to cheese is more important to mouse than cats dist to cheese
-		double temp_dist = (abs(cheese_loc[i][0] - x) + abs(cheese_loc[i][1] - y)) + cat_dist;
-		//printf("cheese_loc [%d,%d] has %d walls\n",cheese_loc[i][0], cheese_loc[i][1], num_walls);
+		//add cat_dist/2 since dist to cheese is more important to mouse than cats dist to cheese
+		double temp_dist = (abs(cheese_loc[i][0] - x) + abs(cheese_loc[i][1] - y)) + (cat_dist/2);
 
-		//calculating a "deadness score" to see which cheeses are more likely trap the mouse
-		//done by considering how many walls there are and if its a dead_end how long that dead end
-		//extends
-
+		//try to prioritize cheese that isn't at a dead end
 		if(temp_dist < min_sum || (min_num_walls == 3 && num_walls < min_num_walls)){
 			min_sum = temp_dist;
 			min_num_walls = num_walls;
@@ -599,62 +562,64 @@ int H_cost_nokitty(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int 
 	return (int) sum;
 }
 
-int saved_path[graph_size][2] = {{-1,-1}};
-int saved_order[size_X][size_Y];
-int saved_num_cheeses;
-bool path_saved = false;
-int saved_cheeses[10][2];
+//BELOW ARE FUNCTION AND VARIABLES DECLARED TO TRY AND GET AROUND BFS RESETTING READ AT OWN RISK
 
-void update_path(int(*path)[2], int mouse_loc[2]){
-	printf("path before\n");
-	print_path(path);
-	for(int i = 0; i < graph_size;i++){
-		if(path[i][0] == mouse_loc[0] && path[i][1] == mouse_loc[1]){
-			printf("path_overlap\n");
-			memmove(path, path+i, (graph_size - i) * sizeof(*path));
-			print_path(path);
-			return;
-		}
-	}
-	printf("no path overlap\n");
-	return;
-}
+// int saved_path[graph_size][2] = {{-1,-1}};
+// int saved_order[size_X][size_Y];
+// int saved_num_cheeses;
+// bool path_saved = false;
+// int saved_cheeses[10][2];
 
-void copy_path(int path1[graph_size][2],int path2 [graph_size][2]){
-	for(int i = 0; i < graph_size; i++){
-		path2[i][0] = path1[i][0];
-		path2[i][1] = path1[i][1];
-	}
-}
+// void update_path(int(*path)[2], int mouse_loc[2]){
+// 	printf("path before\n");
+// 	print_path(path);
+// 	for(int i = 0; i < graph_size;i++){
+// 		if(path[i][0] == mouse_loc[0] && path[i][1] == mouse_loc[1]){
+// 			printf("path_overlap\n");
+// 			memmove(path, path+i, (graph_size - i) * sizeof(*path));
+// 			print_path(path);
+// 			return;
+// 		}
+// 	}
+// 	printf("no path overlap\n");
+// 	return;
+// }
 
-bool coords_in_path(int(*path)[2], int coords[2]){
-	for(int i = 0; i < graph_size; i++){
-		if(path[i][0] == -1 || path[i][1] == -1){
-			return false;
-		}
-		if(path[i][0] == coords[0] && path[i][1] == coords[1]){
-			return true;
-		}
-	}
-	return false;
-}
+// void copy_path(int path1[graph_size][2],int path2 [graph_size][2]){
+// 	for(int i = 0; i < graph_size; i++){
+// 		path2[i][0] = path1[i][0];
+// 		path2[i][1] = path1[i][1];
+// 	}
+// }
 
-void copy_visit_order(int order1[size_X][size_Y], int order2[size_X][size_Y]){
-	for(int i = 0; i < size_X; i++){
-		for(int j = 0; j < size_Y; j++){
-			order2[i][j] = order1[i][j];
-		}
-	}
-	return;
-}
+// bool coords_in_path(int(*path)[2], int coords[2]){
+// 	for(int i = 0; i < graph_size; i++){
+// 		if(path[i][0] == -1 || path[i][1] == -1){
+// 			return false;
+// 		}
+// 		if(path[i][0] == coords[0] && path[i][1] == coords[1]){
+// 			return true;
+// 		}
+// 	}
+// 	return false;
+// }
 
-void copy_cord(int(*set1)[2],int(*set2)[2],int size){
-	for(int i = 0; i < size; i++){
-		set2[i][0] = set1[i][0];
-		set2[i][1] = set1[i][1];
-	}
-	return;
-}
+// void copy_visit_order(int order1[size_X][size_Y], int order2[size_X][size_Y]){
+// 	for(int i = 0; i < size_X; i++){
+// 		for(int j = 0; j < size_Y; j++){
+// 			order2[i][j] = order1[i][j];
+// 		}
+// 	}
+// 	return;
+// }
+
+// void copy_cord(int(*set1)[2],int(*set2)[2],int size){
+// 	for(int i = 0; i < size; i++){
+// 		set2[i][0] = set1[i][0];
+// 		set2[i][1] = set1[i][1];
+// 	}
+// 	return;
+// }
 
 void search(double gr[graph_size][4], int path[graph_size][2], int visit_order[size_X][size_Y], int cat_loc[10][2], int cats, int cheese_loc[10][2], int cheeses, int mouse_loc[1][2], int mode, int (*heuristic)(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_loc[1][2], int cats, int cheeses, double gr[graph_size][4]))
 {
@@ -810,70 +775,78 @@ void search(double gr[graph_size][4], int path[graph_size][2], int visit_order[s
 	if(mode == 0){
 		bfs(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,mouse_loc);
 	}else if(mode == 1){
-		if(!path_saved){
-			printf("no path saved\n");
-			int visited[graph_size] = {false};
-			int iteration = 0;
-			dfs(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,get_grid_position(mouse_loc[0]),visited,0,&iteration);
-			//save path and visit order
-			copy_path(path, saved_path);
-			copy_visit_order(visit_order,saved_order);
-			copy_cord(cheese_loc,saved_cheeses,cheeses);
-			path_saved = true;
-			saved_num_cheeses = cheeses;
-		}else{
-			//if there is a saved path, check if it is still valid
-			
-			//update saved path with current mouse loc
-			update_path(saved_path, mouse_loc[0]);
-			printf("mouse_loc [%d,%d]\n",mouse_loc[0][0],mouse_loc[0][1]);
-			print_path(saved_path);
-			if(saved_num_cheeses == cheeses){
-				for(int i = 0; i < cats; i++){
-					if(coords_in_path(saved_path,cat_loc[i])){
-						printf("creating new path (cats)\n");
-						int visited[graph_size] = {false};
-						int iteration = 0;
-						dfs(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,get_grid_position(mouse_loc[0]),visited,0,&iteration);
-						//save path and visit order
-						copy_cord(cheese_loc,saved_cheeses,cheeses);
-						copy_path(path, saved_path);
-						copy_visit_order(visit_order,saved_order);
-						return;
-					}
-				}
+		//set up visited tracker and iterations then run dfss
+		int visited[graph_size] = {false};
+		int iteration = 0;
+		dfs(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,get_grid_position(mouse_loc[0]),visited,0,&iteration);
 
-				for(int i = 0; i < cheeses; i++){
-					if(cheese_loc[i][0] != saved_cheeses[i][0] || cheese_loc[i][1] != saved_cheeses[i][1]){
-						printf("creating new path (cheeses moved)\n");
-						int visited[graph_size] = {false};
-						int iteration = 0;
-						dfs(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,get_grid_position(mouse_loc[0]),visited,0,&iteration);
-						//save path and visit order
-						copy_cord(cheese_loc,saved_cheeses,cheeses);
-						copy_path(path, saved_path);
-						copy_visit_order(visit_order,saved_order);
-						return;
-					}
-				}
-				//if not cats on path and number of cheeses are same, then path is still valid so just redo saved patg
-				printf("copying old path\n");
-				copy_path(saved_path,path);
-				copy_visit_order(saved_order,visit_order);
-			}else{
-				int visited[graph_size] = {false};
-				int iteration = 0;
-				printf("creating new path (num cheese changed)\n");
-				dfs(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,get_grid_position(mouse_loc[0]),visited,0,&iteration);
-				//save path and visit order
-				copy_cord(cheese_loc,saved_cheeses,cheeses);
-				copy_visit_order(visit_order,saved_order);
-				saved_num_cheeses = cheeses;
-			}
+		//below is an attempt to get around the fact that bfs has its visited nodes wiped whenever search is called,
+		//READ AT OWN RISK
+
+		// if(!path_saved){
+		// 	printf("no path saved\n");
+		// 	int visited[graph_size] = {false};
+		// 	int iteration = 0;
+		// 	dfs(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,get_grid_position(mouse_loc[0]),visited,0,&iteration);
+		// 	//save path and visit order
+		// 	copy_path(path, saved_path);
+		// 	copy_visit_order(visit_order,saved_order);
+		// 	copy_cord(cheese_loc,saved_cheeses,cheeses);
+		// 	path_saved = true;
+		// 	saved_num_cheeses = cheeses;
+		// }else{
+		// 	//if there is a saved path, check if it is still valid
 			
-			//otherwise path is still valid
-			//update saved_path to current position
-		}
+		// 	//update saved path with current mouse loc
+		// 	update_path(saved_path, mouse_loc[0]);
+		// 	printf("mouse_loc [%d,%d]\n",mouse_loc[0][0],mouse_loc[0][1]);
+		// 	print_path(saved_path);
+		// 	if(saved_num_cheeses == cheeses){
+		// 		for(int i = 0; i < cats; i++){
+		// 			if(coords_in_path(saved_path,cat_loc[i])){
+		// 				printf("creating new path (cats)\n");
+		// 				int visited[graph_size] = {false};
+		// 				int iteration = 0;
+		// 				dfs(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,get_grid_position(mouse_loc[0]),visited,0,&iteration);
+		// 				//save path and visit order
+		// 				copy_cord(cheese_loc,saved_cheeses,cheeses);
+		// 				copy_path(path, saved_path);
+		// 				copy_visit_order(visit_order,saved_order);
+		// 				return;
+		// 			}
+		// 		}
+
+		// 		for(int i = 0; i < cheeses; i++){
+		// 			if(cheese_loc[i][0] != saved_cheeses[i][0] || cheese_loc[i][1] != saved_cheeses[i][1]){
+		// 				printf("creating new path (cheeses moved)\n");
+		// 				int visited[graph_size] = {false};
+		// 				int iteration = 0;
+		// 				dfs(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,get_grid_position(mouse_loc[0]),visited,0,&iteration);
+		// 				//save path and visit order
+		// 				copy_cord(cheese_loc,saved_cheeses,cheeses);
+		// 				copy_path(path, saved_path);
+		// 				copy_visit_order(visit_order,saved_order);
+		// 				return;
+		// 			}
+		// 		}
+		// 		//if not cats on path and number of cheeses are same, then path is still valid so just redo saved patg
+		// 		printf("copying old path\n");
+		// 		copy_path(saved_path,path);
+		// 		copy_visit_order(saved_order,visit_order);
+		// 	}else{
+		// 		int visited[graph_size] = {false};
+		// 		int iteration = 0;
+		// 		printf("creating new path (num cheese changed)\n");
+		// 		dfs(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,get_grid_position(mouse_loc[0]),visited,0,&iteration);
+		// 		//save path and visit order
+		// 		copy_cord(cheese_loc,saved_cheeses,cheeses);
+		// 		copy_visit_order(visit_order,saved_order);
+		// 		saved_num_cheeses = cheeses;
+		// 	}
+			
+		// 	//otherwise path is still valid
+		// 	//update saved_path to current position
+		// }
 		
 		//print_path(path);
 	}else if(mode == 2){

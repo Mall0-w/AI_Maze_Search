@@ -1,11 +1,7 @@
-figure out how to have dfs preserve visited nodes
+figure out how to have dfs preserve visited nodes or at least make it consistent between states
 currently only solutions are to essentially force it to use the inital dfs instead of recalculating
-dfs currently looping on state change (./AI_search 1525 2 2 2 0)
+dfs currently looping on state change (./AI_search 1525 1 1 2 0)
 
-H* no_kitty needs to be fully optomized (need to account for walls)
+need to find a way to make h* nokitty more efficient, like in regards to cat's closeness to cheese (see kitty brainstorm)
 
-need to account for super mouse status
-
-
-
-NEED TO FIND WAY TO MAKE DFS CONSISTENT BETWEEN PATHS AND NEED TO FIND OUT WHAT TO DO IF CAN'T FIND PATH FOR DFS
+Still need to test for memory leaks
