@@ -28,23 +28,24 @@
 % COMPLETE THIS TEXT BOX:
 %
 % 1) Student Name: Kyle Lewis
-% 2) Student Name:		
+% 2) Student Name: Krutik Shah		
 %
 % 1) Student number: 1006113215
-% 2) Student number:
+% 2) Student number: 1006213526
 % 
 % 1) UtorID Lewisky2
-% 2) UtorID
+% 2) UtorID Shahkr10
 % 
 % We hereby certify that the work contained here is our own
 %
-% Kyle Lewis		             _____________________
+% Kyle Lewis		             ________Krutik_Shah_______
 % (sign with your name)            (sign with your name)
 ***********************************************************************/
 
 #include "AI_search.h"
 #include "stdbool.h"
 #include "string.h"
+#include <time.h>
 #define INT_MAX 2147483647;
 
 /**
@@ -324,18 +325,39 @@ bool dfs(double gr[graph_size][4], int path[graph_size][2], int visit_order[size
 
 	//check all around it clockwise and call functions on those
 	//if dfs can be completed on those stop search otherwise continue clockwise
-	if(gr[mouse_grid][0] == 1 &&  dfs(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,mouse_grid-size_X,visited,depth+1,iteration)){
-		return true;
+	int new_pos,dir;
+	for(int t=0;t<4;t++){
+		dir=(((int) time(NULL))+t)%4;
+		if(dir==0){
+			new_pos=mouse_grid-size_X;
+		}
+		if(dir==2){
+			new_pos=mouse_grid+size_X;
+		}
+		if(dir==1){
+			new_pos=mouse_grid+1;
+		}
+		if(dir==3){
+			new_pos=mouse_grid-1;
+		}
+		if(gr[mouse_grid][dir] == 1 &&  dfs(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,new_pos,visited,depth+1,iteration)){
+			return true;
+		}
 	}
-	if(gr[mouse_grid][1] == 1 && dfs(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,mouse_grid+1,visited,depth+1,iteration)){
-		return true;
-	}
-	if(gr[mouse_grid][2] == 1 && dfs(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,mouse_grid+size_X,visited,depth+1,iteration)){
-		return true;
-	}
-	if(gr[mouse_grid][3] == 1 && dfs(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,mouse_grid-1,visited,depth+1,iteration)){
-		return true;
-	}
+
+
+	// if(gr[mouse_grid][0] == 1 &&  dfs(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,mouse_grid-size_X,visited,depth+1,iteration)){
+	// 	return true;
+	// }
+	// if(gr[mouse_grid][1] == 1 && dfs(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,mouse_grid+1,visited,depth+1,iteration)){
+	// 	return true;
+	// }
+	// if(gr[mouse_grid][2] == 1 && dfs(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,mouse_grid+size_X,visited,depth+1,iteration)){
+	// 	return true;
+	// }
+	// if(gr[mouse_grid][3] == 1 && dfs(gr,path,visit_order,cat_loc,cats,cheese_loc,cheeses,mouse_grid-1,visited,depth+1,iteration)){
+	// 	return true;
+	// }
 
 	//if none of its functions lead to a cheese, return false because this node doesn't
 	//also make sure to reset the path
@@ -494,6 +516,53 @@ int H_cost(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_lo
 	return min_distance;
 }
 
+int cats_cost(double gr[graph_size][4], int cat_loc[10][2], int cats, int pos){
+	
+	int cat_pos,cost=0;
+	// int cheese_pos=get_grid_position(cheese_loc[cheese_idx]);
+	int MAX_STEPS=10;
+	int visited[graph_size] = {0};
+
+	for(int i = 0; i < cats; i++){
+		
+		cat_pos = get_grid_position(cat_loc[i]);
+		Queue* queue = createQueue();
+		enQueue(queue,cat_pos); 
+
+		for(int j= MAX_STEPS;j>0;j--){
+			//dequeue position
+			int curr_pos = deQueue(queue);
+			
+			if( curr_pos == pos){
+				cost+=j;
+				break;
+			}
+			if (curr_pos==-1){
+				break;
+			}
+
+			if(gr[curr_pos][0] == 1  && curr_pos - size_X >= 0 && !visited[curr_pos-size_X]){
+				visited[curr_pos-size_X] = 1;
+				enQueue(queue,curr_pos - size_X);
+			}
+			if(gr[curr_pos][1] == 1  && curr_pos+1>= 0 && !visited[curr_pos+1]){
+				visited[curr_pos+1] = 1;
+				enQueue(queue,curr_pos - size_X);
+			}
+			if(gr[curr_pos][2] == 1  && curr_pos + size_X >= 0 && !visited[curr_pos+size_X]){
+				visited[curr_pos+size_X] = 1;
+				enQueue(queue,curr_pos - size_X);
+			}
+			if(gr[curr_pos][3] == 1  && curr_pos-1>= 0 && !visited[curr_pos-1]){
+				visited[curr_pos-1] = 1;
+				enQueue(queue,curr_pos - size_X);
+			}
+		}
+		freeQueue(queue);		
+	}
+	return pow(2,cost);
+}
+
 int H_cost_nokitty(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_loc[1][2], int cats, int cheeses, double gr[graph_size][4])
 {
  /*
@@ -520,46 +589,60 @@ int H_cost_nokitty(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int 
 	//sum lengths of divide cheese cost by length of path
 
 	//get heursitics for shortest path but add onto it the cost of the kitties;
-	double min_sum = INT_MAX;
-	int min_num_walls = 3;
-	double sum = 0;
+
+
+	// double min_sum = INT_MAX;
+	// int min_num_walls = 3;
+	// double sum = 0;
 	//for each cheese, get dist to mouse + sum(dist to cat)
 	//this will be the most optimal cheese
-	for(int i = 0; i < cheeses; i++){
-		int cat_dist = 0;
-		for(int j = 0; j < cats; j++){
-			cat_dist += abs(cheese_loc[i][0] -cat_loc[j][0]) + abs(cheese_loc[i][1] - cat_loc[j][1]);
-		}
-		//get amount of walls around cheese (more walls = less savoury)
-		int cheese_grid = get_grid_position(cheese_loc[i]);
-		int num_walls = 0;
-		bool looped= false;
-		for(int j = 0; j < 4; j++){
-			if( gr[cheese_grid][j] == 0){
-				num_walls++;
-			}
-		}
+	// for(int i = 0; i < cheeses; i++){
+	// 	int cat_dist = 0;
+	// 	for(int j = 0; j < cats; j++){
+	// 		cat_dist += abs(cheese_loc[i][0] -cat_loc[j][0]) + abs(cheese_loc[i][1] - cat_loc[j][1]);
+	// 	}
+	// 	//get amount of walls around cheese (more walls = less savoury)
+	// 	int cheese_grid = get_grid_position(cheese_loc[i]);
+	// 	int num_walls = 0;
+	// 	bool looped= false;
+	// 	for(int j = 0; j < 4; j++){
+	// 		if( gr[cheese_grid][j] == 0){
+	// 			num_walls++;
+	// 		}
+	// 	}
 		
-		//add cat_dist/2 since dist to cheese is more important to mouse than cats dist to cheese
-		double temp_dist = (abs(cheese_loc[i][0] - x) + abs(cheese_loc[i][1] - y)) + (cat_dist/2);
+	// 	//add cat_dist/2 since dist to cheese is more important to mouse than cats dist to cheese
+	// 	double temp_dist = (abs(cheese_loc[i][0] - x) + abs(cheese_loc[i][1] - y)) + (cat_dist/2);
 
-		//try to prioritize cheese that isn't at a dead end
-		if(temp_dist < min_sum || (min_num_walls == 3 && num_walls < min_num_walls)){
-			min_sum = temp_dist;
-			min_num_walls = num_walls;
-		}
-	}
+	// 	//try to prioritize cheese that isn't at a dead end
+	// 	if(temp_dist < min_sum || (min_num_walls == 3 && num_walls < min_num_walls)){
+	// 		min_sum = temp_dist;
+	// 		min_num_walls = num_walls;
+	// 	}
+	// }
 
-	for(int i = 0; i < cats; i++){
+	// for(int i = 0; i < cats; i++){
 
-		int cat_dist = abs(cat_loc[i][0] - x) + abs(cat_loc[i][1] - y);
-		sum += min_sum / pow(cat_dist,2); 
-	}
+	// 	int cat_dist = abs(cat_loc[i][0] - x) + abs(cat_loc[i][1] - y);
+	// 	sum += min_sum / pow(cat_dist,2); 
+	// }
 
 	//then take that distance to the cheese
 	//and for each cat add opt_dist / dist to cat^2 
 
-	return (int) sum;
+
+	//cappedbfs+manhatten dist:
+
+	int min_distance = INT_MAX;
+	for(int i = 0; i < cheeses; i++){
+		int new_dist = (abs(x - cheese_loc[i][0]) + abs(y - cheese_loc[i][1]));
+		if (new_dist < min_distance){
+			min_distance = new_dist;
+		}
+	}
+	return (int) (min_distance + cats_cost(gr,cat_loc,cats,(x + (size_X * y))));
+
+	// return (int) sum;
 }
 
 //BELOW ARE FUNCTION AND VARIABLES DECLARED TO TRY AND GET AROUND BFS RESETTING READ AT OWN RISK
