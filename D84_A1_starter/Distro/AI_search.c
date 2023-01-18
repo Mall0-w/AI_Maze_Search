@@ -326,8 +326,9 @@ bool dfs(double gr[graph_size][4], int path[graph_size][2], int visit_order[size
 	//check all around it clockwise and call functions on those
 	//if dfs can be completed on those stop search otherwise continue clockwise
 	int new_pos,dir;
+	int ran=(((int) time(NULL)));
 	for(int t=0;t<4;t++){
-		dir=(((int) time(NULL))+t)%4;
+		dir=(ran+t)%4;
 		if(dir==0){
 			new_pos=mouse_grid-size_X;
 		}
