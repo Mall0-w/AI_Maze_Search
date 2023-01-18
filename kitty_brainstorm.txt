@@ -3,3 +3,5 @@
 2) get manhattan dist between kitty and mouse and increase it exponentially the closer it gets
 
 3) consider the amount of kitties in a square around the new mouse place, minimize the amount of kitties in that square
+
+4) consider the amount of cheese left, if there is only one cheese, can be much more bold since game ends when cheese is captured

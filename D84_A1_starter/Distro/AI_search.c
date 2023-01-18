@@ -267,6 +267,8 @@ void bfs(double gr[graph_size][4], int path[graph_size][2], int visit_order[size
 
 	//if didn't find cheese index just return
 	if(cheese_index == -1){
+		path[0][0] = mouse_loc[0][0];
+		path[0][1] = mouse_loc[0][1];
 		return;
 	}
 	//otherwise go through predessecors to get path in reverse order then reverse it
@@ -426,6 +428,8 @@ void heuristic_search(double gr[graph_size][4], int path[graph_size][2], int vis
 	//if don't have a cheese index then path wasn't found
 	if (cheese_index < 0){
 		printf("no cheese found\n");
+		path[0][0] = mouse_loc[0][0];
+		path[0][1] = mouse_loc[0][1];
 		return;
 	}
 	
@@ -528,22 +532,49 @@ int H_cost_nokitty(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int 
 	//sum lengths of divide cheese cost by length of path
 
 	//get heursitics for shortest path but add onto it the cost of the kitties;
-	float sum = 0;
-	int arb_const = 100;
-	//printf("no kitty called\n");
-	int cheese_cost = H_cost(x,y,cat_loc,cheese_loc,mouse_loc,cats,cheeses,gr);
-	for(int i = 0; i<cats; i++){
-		int predicted = abs(cat_loc[i][0] - x) + abs(cat_loc[i][1] - y);
-		//make the mouse scared of the cats by getting distance to cats and using inverse square law to pick best route
-		//also add a bonus for the amount of deadends around the mouse
-		int end_mod = 0;
-		for(int i = 0; i < 4; i++){
-			if(gr[y*size_X + x][i] == 0){
-				end_mod++; 
+	double min_sum = INT_MAX;
+	int min_num_walls = 3;
+	double sum = 0;
+	//for each cheese, get dist to mouse + sum(dist to cat)
+	//this will be the most optimal cheese
+	for(int i = 0; i < cheeses; i++){
+		int cat_dist = 0;
+		for(int j = 0; j < cats; j++){
+			cat_dist += abs(cheese_loc[i][0] -cat_loc[j][0]) + abs(cheese_loc[i][1] - cat_loc[j][1]);
+		}
+		//get amount of walls around cheese (more walls = less savoury)
+		int cheese_grid = get_grid_position(cheese_loc[i]);
+		int num_walls = 0;
+		bool looped= false;
+		for(int j = 0; j < 4; j++){
+			if( gr[cheese_grid][j] == 0){
+				num_walls++;
 			}
 		}
-		sum += (pow(cheese_cost,2) + pow(end_mod,2)) / pow(predicted,2);
+		
+		//divide it by the cat_dist/2 since dist to cheese is more important to mouse than cats dist to cheese
+		double temp_dist = (abs(cheese_loc[i][0] - x) + abs(cheese_loc[i][1] - y) + (cat_dist/2));
+		//printf("cheese_loc [%d,%d] has %d walls\n",cheese_loc[i][0], cheese_loc[i][1], num_walls);
+
+		//calculating a "deadness score" to see which cheeses are more likely trap the mouse
+		//done by considering how many walls there are and if its a dead_end how long that dead end
+		//extends
+
+		if(temp_dist < min_sum || (min_num_walls == 3 && num_walls < min_num_walls)){
+			min_sum = temp_dist;
+			min_num_walls = num_walls;
+		}
 	}
+
+	for(int i = 0; i < cats; i++){
+
+		int cat_dist = abs(cat_loc[i][0] - x) + abs(cat_loc[i][1] - y);
+		sum += min_sum / pow(cat_dist,2); 
+	}
+
+	//then take that distance to the cheese
+	//and for each cat add opt_dist / dist to cat^2 
+
 	return (int) sum;
 }
 
