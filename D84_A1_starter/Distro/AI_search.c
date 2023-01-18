@@ -482,40 +482,6 @@ void heuristic_search(double gr[graph_size][4], int path[graph_size][2], int vis
 
 }
 
-int H_cost(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_loc[1][2], int cats, int cheeses, double gr[graph_size][4])
-{
- /*
-	This function computes and returns the heuristic cost for location x,y.
-	As discussed in lecture, this means estimating the cost of getting from x,y to the goal. 
-	The goal is cheese. Which cheese is up to you.
-	Whatever you code here, your heuristic must be admissible.
-
-	Input arguments:
-
-		x,y - Location for which this function will compute a heuristic search cost
-		cat_loc - Cat locations
-		cheese_loc - Cheese locations
-		mouse_loc - Mouse location
-		cats - # of cats
-		cheeses - # of cheeses
-		gr - The graph's adjacency list for the maze
-
-		These arguments are as described in the search() function above
- */
-
-	/**
-	 * have each cost be manhattan distance to closest cheese (can figure out better algo later)
-	*/
-	int min_distance = INT_MAX;
-	for(int i = 0; i < cheeses; i++){
-		int new_dist = (abs(x - cheese_loc[i][0]) + abs(y - cheese_loc[i][1]));
-		if (new_dist < min_distance){
-			min_distance = new_dist;
-		}
-	}
-	return min_distance;
-}
-
 int cats_cost(double gr[graph_size][4], int cat_loc[10][2], int cats, int pos){
 	
 	int cat_pos,cost=0;
@@ -560,7 +526,41 @@ int cats_cost(double gr[graph_size][4], int cat_loc[10][2], int cats, int pos){
 		}
 		freeQueue(queue);		
 	}
-	return pow(2,cost);
+	return cost;
+}
+
+int H_cost(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_loc[1][2], int cats, int cheeses, double gr[graph_size][4])
+{
+ /*
+	This function computes and returns the heuristic cost for location x,y.
+	As discussed in lecture, this means estimating the cost of getting from x,y to the goal. 
+	The goal is cheese. Which cheese is up to you.
+	Whatever you code here, your heuristic must be admissible.
+
+	Input arguments:
+
+		x,y - Location for which this function will compute a heuristic search cost
+		cat_loc - Cat locations
+		cheese_loc - Cheese locations
+		mouse_loc - Mouse location
+		cats - # of cats
+		cheeses - # of cheeses
+		gr - The graph's adjacency list for the maze
+
+		These arguments are as described in the search() function above
+ */
+
+	/**
+	 * have each cost be manhattan distance to closest cheese (can figure out better algo later)
+	*/
+	int min_distance = INT_MAX;
+	for(int i = 0; i < cheeses; i++){
+		int new_dist = (abs(x - cheese_loc[i][0]) + abs(y - cheese_loc[i][1]));
+		if (new_dist < min_distance){
+			min_distance = new_dist;
+		}
+	}
+	return min_distance;
 }
 
 int H_cost_nokitty(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_loc[1][2], int cats, int cheeses, double gr[graph_size][4])
@@ -594,8 +594,8 @@ int H_cost_nokitty(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int 
 	// double min_sum = INT_MAX;
 	// int min_num_walls = 3;
 	// double sum = 0;
-	//for each cheese, get dist to mouse + sum(dist to cat)
-	//this will be the most optimal cheese
+	// // for each cheese, get dist to mouse + sum(dist to cat)
+	// // this will be the most optimal cheese
 	// for(int i = 0; i < cheeses; i++){
 	// 	int cat_dist = 0;
 	// 	for(int j = 0; j < cats; j++){
@@ -631,17 +631,29 @@ int H_cost_nokitty(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int 
 	//and for each cat add opt_dist / dist to cat^2 
 
 
-	//cappedbfs+manhatten dist:
-
+	//capped bfs+manhatten dist:
+	int min_num_walls = 3;
 	int min_distance = INT_MAX;
 	for(int i = 0; i < cheeses; i++){
 		int new_dist = (abs(x - cheese_loc[i][0]) + abs(y - cheese_loc[i][1]));
+
+		//get amount of walls around cheese (more walls = less savoury)
+		int cheese_grid = get_grid_position(cheese_loc[i]);
+		int num_walls = 0;
+		for(int j = 0; j < 4; j++){
+			if( gr[cheese_grid][j] == 0){
+				num_walls++;
+			}
+		}
 		if (new_dist < min_distance){
 			min_distance = new_dist;
 		}
 	}
-	return (int) (min_distance + cats_cost(gr,cat_loc,cats,(x + (size_X * y))));
+	int cost= (int) (min_distance + 10*cats_cost(gr,cat_loc,cats,(x + (size_X * y))));
 
+	printf("no kitty cost:=%d\n",cost);
+
+	return cost;
 	// return (int) sum;
 }
 
