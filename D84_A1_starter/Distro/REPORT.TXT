@@ -46,22 +46,25 @@ but explain carefully when needed.
 
 
 3 .- (2 marks) Describe the heuristic function you used for A* search. Why is this heuristic admissible?
-     My hueristic function is simple to go by the manhattan distance between the mouse and the closest cheese.
+
+     Our hueristic function is simple to go by the manhattan distance between the mouse and the closest cheese.
      This is admissible because manhattan distance is the amount of nodes that would be travelled if there was a direct
      path between the mouse and the cheese, therefore it will always be less than or equal to the true cost of the path.
 
 4 .- (1 marks) Explain how your heuristic function accounts for the presence of multiple cheese.
-     My hueristic function accounts for multiple cheeses by only considering the one closest to the mouse and ignoring all others.
+     
+     Our hueristic function accounts for multiple cheeses by only considering the one closest to the mouse and ignoring all others.
 
 5 .- (1 marks) Is A* equivalent to BFS for this problem? or is it better/worse? explain your answer based on 
      your observations.
+
      It depends on what you mean by better.  In terms of pathfinding; they both find the shortest path (so long as the heuristic is admissible),
      but A* is much faster on average than BFS since it typically has to search through less nodes.
 
 6 .- (2 marks) Describe your heuristic function for A*-nokitty. How does it work? what factors are considered
      into the cost function? is it admissible (yes/no and why)?
 
-     My heuristic function goes over each cat and finds their manhattan distance to the mouse.  It then takes the mouse's manhattan
+     Our heuristic function goes over each cat and finds their manhattan distance to the mouse.  It then takes the mouse's manhattan
      distance to the cheese, squares it, adds the square of the number of walls around the mouse (to prevent it from being trapped),
      then divides it by the square of the cat's manhattan distance (using inverse square law with the cat to discourgae the mouse 
      from moving closer to it).  It sums this result of (dist(cheese)^2+num_walls^2)/dist(cat)^2 for each cat and returns that as its heurisitc.
@@ -74,7 +77,7 @@ but explain carefully when needed.
      (i.e. is there anything we are missing that could lead to a smarter mouse?) - this is
      a more or less open question, but we talked about it in lecture!
 
-     I think data is more or less the largest limitation.  For example, if we could get the entire planned paths of each cat
+     Data is more or less the largest limitation.  For example, if we could get the entire planned paths of each cat
      or a small sample of them that could help our mice exponentially in terms of avoiding cats. However, if we were to start
      considering paths like that, it would make our programs much more complex as they will begin to handle insane numbers of parameters.
 _____________________________________________________
