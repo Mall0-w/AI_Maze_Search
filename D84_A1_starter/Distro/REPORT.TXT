@@ -40,8 +40,8 @@ but explain carefully when needed.
      support your answer based on your observations)
 
      No it depends entirely on context, BFS will always find the shortest path but in terms of performance it can vary.
-     BFS will work better if the solutions aren't very far from the start (less of a queue developed and less paths to analyze)
-     whereas BFS will work better if the solutions are far from the start (it goes as far as it can first)
+     BFS will work better in terms of search time if the solutions aren't very far from the start (less of a queue developed and less paths to analyze)
+     whereas BFS will work better in terms of search time if the solutions are far from the start (it goes as far as it can first)
      worst case however, they both preform the same.
 
 
