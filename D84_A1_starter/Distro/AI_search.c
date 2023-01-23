@@ -67,7 +67,7 @@ typedef struct Queue{
 Queue* createQueue(){
 	Queue* newQueue = (Queue*)calloc(1, sizeof(Queue));
 	if(newQueue == NULL){
-		printf("Not enough memory for queue");
+		// printf("Not enough memory for queue");
 		return NULL;
 	}
 	newQueue->first = NULL;
@@ -80,7 +80,7 @@ Queue* createQueue(){
 Node* createNode(int value){
 	Node* newNode = (Node*)calloc(1, sizeof(Node));
 	if(newNode == NULL){
-		printf("not enoguh memory for new node");
+		// printf("not enoguh memory for new node");
 		return NULL;
 	}
 	newNode->value = value;
@@ -147,7 +147,7 @@ void priorityEnQueue(Queue* queue, int value, int priority){
 
 int deQueue(Queue* queue){
 	if(queue->first == NULL){
-		printf("Nothing in queue");
+		// printf("Nothing in queue");
 		return -1;
 	}
 	Node* first = queue->first;
@@ -177,10 +177,10 @@ void freeQueue(Queue* queue){
 void print_path(int (*path)[2]){
 	for(int i = 0; i < graph_size; i++){
 		if(path[i][0] == -1 || path[i][1] == -1){
-			printf("i:%d\n",i);
+			// printf("i:%d\n",i);
 			break;
 		}
-		printf("[%d,%d]->",path[i][0],path[i][1]);
+		// printf("[%d,%d]->",path[i][0],path[i][1]);
 	}
 	return;
 }
@@ -255,7 +255,7 @@ void bfs(double gr[graph_size][4], int path[graph_size][2], int visit_order[size
 	//if didn't find cheese index just return
 	//and have mouse stand still
 	if(cheese_index == -1){
-		printf("no cheese found\n");
+		// printf("no cheese found\n");
 		path[0][0] = mouse_loc[0][0];
 		path[0][1] = mouse_loc[0][1];
 		path[1][0] = mouse_loc[0][0];
@@ -267,6 +267,7 @@ void bfs(double gr[graph_size][4], int path[graph_size][2], int visit_order[size
 			}
 		}
 		visit_order[mouse_loc[0][0]][mouse_loc[0][1]] = 1;
+		freeQueue(queue);
 		return;
 	}
 	//otherwise go through predessecors to get path in reverse order then reverse it
@@ -319,7 +320,7 @@ bool dfs(double gr[graph_size][4], int path[graph_size][2], int visit_order[size
 
 	//if current location is at cheese, then return True
 	if(coordsInArray(mouse_grid,cheese_loc,cheeses) >= 0){
-		printf("found cheese\n");
+		// printf("found cheese\n");
 		return true;
 	}
 
@@ -398,7 +399,7 @@ void heuristic_search(double gr[graph_size][4], int path[graph_size][2], int vis
 		//if its a cheese then you've found the cheese
 		cheese_index = coordsInArray(curr_pos,cheese_loc,cheeses);
 		if(cheese_index >= 0){
-			printf("cheese has been found!\n");
+			// printf("cheese has been found!\n");
 			break;
 		}
 
@@ -435,7 +436,7 @@ void heuristic_search(double gr[graph_size][4], int path[graph_size][2], int vis
 	}
 	//if don't have a cheese index then path wasn't found
 	if (cheese_index < 0){
-		printf("no cheese found\n");
+		// printf("no cheese found\n");
 		path[0][0] = mouse_loc[0][0];
 		path[0][1] = mouse_loc[0][1];
 		path[1][0] = mouse_loc[0][0];
@@ -447,6 +448,7 @@ void heuristic_search(double gr[graph_size][4], int path[graph_size][2], int vis
 			}
 		}
 		visit_order[mouse_loc[0][0]][mouse_loc[0][1]] = 1;
+		freeQueue(priorityQueue);
 		return;
 	}
 	
@@ -652,7 +654,7 @@ int H_cost_nokitty(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int 
 	}
 	int cost= (int) (min_distance + 10*cats_cost(gr,cat_loc,cats,(x + (size_X * y))));
 
-	printf("no kitty cost:=%d\n",cost);
+	//printf("no kitty cost:=%d\n",cost);
 
 	return cost;
 	// return (int) sum;
