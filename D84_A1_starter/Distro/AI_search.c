@@ -566,6 +566,74 @@ int H_cost(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_lo
 	return min_distance;
 }
 
+int calculate_deadness(int gridpos, double gr[graph_size][4]){
+	//basically does bfs until finds a fork in the road 
+	//this is to dissaude from getting cheeses in tunnels or dead ends
+	//unless super nessecary
+	int deadness = 0;
+	Queue* deadqueue = createQueue();
+	enQueue(deadqueue, gridpos);
+	int predecessor[graph_size];
+	bool square = false;
+
+	for(int i = 0; i < graph_size; i++){
+		predecessor[i] = -1;
+	}
+	int curr_pos = gridpos;
+
+	while(deadqueue->first != NULL){
+		curr_pos = deQueue(deadqueue);
+		int deadness = 0;
+
+		for(int i = 0; i < 4; i++){
+			if(gr[curr_pos][i] == 1){
+				deadness++;
+			}
+		}
+		if(deadness == 1){
+			square = true;
+		}else if(deadness >= 3){
+			//printf("fork detected\n");
+			break;
+		}
+
+		if(gr[curr_pos][0] == 1 && curr_pos - size_X >= 0 && predecessor[curr_pos-size_X] == -1){
+			predecessor[curr_pos-size_X] = curr_pos;
+			enQueue(deadqueue,curr_pos-size_X);
+		}
+		if(gr[curr_pos][1] == 1 && curr_pos + 1 < graph_size && predecessor[curr_pos+1] == -1){
+			predecessor[curr_pos+1] = curr_pos;
+			enQueue(deadqueue,curr_pos+1);
+		}
+		if(gr[curr_pos][2] == 1 && curr_pos + size_X < graph_size && predecessor[curr_pos+size_X] == -1){
+			predecessor[curr_pos+size_X] = curr_pos;
+			enQueue(deadqueue,curr_pos+size_X);
+		}
+		if(gr[curr_pos][3] == 1 && curr_pos - 1 >= 0 && predecessor[curr_pos-1] == -1){
+			predecessor[curr_pos-1] = curr_pos;
+			enQueue(deadqueue,curr_pos-1);
+		}
+		//printf("iterating\n");
+
+	}
+	freeQueue(deadqueue);
+	int dead_score = 1;
+	//printf("node that %d %d ended on: %d %d\n",gridpos%size_X,gridpos/size_Y,curr_pos%size_X,curr_pos/size_Y);
+	while(predecessor[curr_pos] != -1 && curr_pos != gridpos){
+		dead_score+=1;
+		curr_pos = predecessor[curr_pos];
+	//	printf("iterating; curr_pos = %d\n",curr_pos);
+	}
+	if(square){
+		//printf("squaring\n");
+		return dead_score * dead_score;
+	}
+	return dead_score;
+
+	//if its at a dead end (queue got emptied)
+	//square its cost
+}
+
 int H_cost_nokitty(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_loc[1][2], int cats, int cheeses, double gr[graph_size][4])
 {
  /*
@@ -594,70 +662,59 @@ int H_cost_nokitty(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int 
 	//get heursitics for shortest path but add onto it the cost of the kitties;
 
 
-	// double min_sum = INT_MAX;
-	// int min_num_walls = 3;
-	// double sum = 0;
-	// // for each cheese, get dist to mouse + sum(dist to cat)
-	// // this will be the most optimal cheese
-	// for(int i = 0; i < cheeses; i++){
-	// 	int cat_dist = 0;
-	// 	for(int j = 0; j < cats; j++){
-	// 		cat_dist += abs(cheese_loc[i][0] -cat_loc[j][0]) + abs(cheese_loc[i][1] - cat_loc[j][1]);
-	// 	}
-	// 	//get amount of walls around cheese (more walls = less savoury)
-	// 	int cheese_grid = get_grid_position(cheese_loc[i]);
-	// 	int num_walls = 0;
-	// 	bool looped= false;
-	// 	for(int j = 0; j < 4; j++){
-	// 		if( gr[cheese_grid][j] == 0){
-	// 			num_walls++;
-	// 		}
-	// 	}
+	double min_sum = INT_MAX;
+	int min_num_walls = 3;
+	double sum = 0;
+	// for each cheese, get dist to mouse + sum(dist to cat)
+	// this will be the most optimal cheese
+	for(int i = 0; i < cheeses; i++){
+		int cat_dist = 0;
+		double temp_dist = 0;
+		for(int j = 0; j < cats; j++){
+			temp_dist += (abs(cheese_loc[i][0] - x) + abs(cheese_loc[i][1] - y)) / (abs(cheese_loc[i][0] -cat_loc[j][0]) + abs(cheese_loc[i][1] - cat_loc[j][1]));
+		}
+		//get amount of walls around cheese (more walls = less savoury)
+		int cheese_grid = get_grid_position(cheese_loc[i]);
 		
-	// 	//add cat_dist/2 since dist to cheese is more important to mouse than cats dist to cheese
-	// 	double temp_dist = (abs(cheese_loc[i][0] - x) + abs(cheese_loc[i][1] - y)) + (cat_dist/2);
+		//add cat_dist/2 since dist to cheese is more important to mouse than cats dist to cheese
 
-	// 	//try to prioritize cheese that isn't at a dead end
-	// 	if(temp_dist < min_sum || (min_num_walls == 3 && num_walls < min_num_walls)){
-	// 		min_sum = temp_dist;
-	// 		min_num_walls = num_walls;
-	// 	}
-	// }
+		int deadness = calculate_deadness(cheese_grid,gr);
+		printf("deadness of %d,%d: %d\n",cheese_loc[i][0],cheese_loc[i][1],deadness);
+		temp_dist = temp_dist * (deadness);
+		//printf("cost of %d,%d: %f\n",cheese_loc[i][0],cheese_loc[i][1],temp_dist);
+		//try to prioritize cheese that isn't at a dead end
+		if(temp_dist < min_sum){
+			min_sum = temp_dist;
+		}
+	}
 
-	// for(int i = 0; i < cats; i++){
+	for(int i = 0; i < cats; i++){
 
-	// 	int cat_dist = abs(cat_loc[i][0] - x) + abs(cat_loc[i][1] - y);
-	// 	sum += min_sum / pow(cat_dist,2); 
-	// }
+		int cat_dist = abs(cat_loc[i][0] - x) + abs(cat_loc[i][1] - y);
+		sum += min_sum / pow(cat_dist,2); 
+	}
 
 	//then take that distance to the cheese
 	//and for each cat add opt_dist / dist to cat^2 
 
 
 	//capped bfs+manhatten dist:
-	int min_num_walls = 3;
-	int min_distance = INT_MAX;
-	for(int i = 0; i < cheeses; i++){
-		int new_dist = (abs(x - cheese_loc[i][0]) + abs(y - cheese_loc[i][1]));
+	// int min_distance = INT_MAX;
+	// for(int i = 0; i < cheeses; i++){
+	// 	int new_dist = (abs(x - cheese_loc[i][0]) + abs(y - cheese_loc[i][1]));
 
-		//get amount of walls around cheese (more walls = less savoury)
-		int cheese_grid = get_grid_position(cheese_loc[i]);
-		int num_walls = 0;
-		for(int j = 0; j < 4; j++){
-			if( gr[cheese_grid][j] == 0){
-				num_walls++;
-			}
-		}
-		if (new_dist < min_distance){
-			min_distance = new_dist;
-		}
-	}
-	int cost= (int) (min_distance + 10*cats_cost(gr,cat_loc,cats,(x + (size_X * y))));
+	// 	//get amount of walls around cheese (more walls = less savoury)
+	// 	int cheese_grid = get_grid_position(cheese_loc[i]);
+	// 	if (new_dist < min_distance){
+	// 		min_distance = new_dist;
+	// 	}
+	// }
+	// int cost= (int) (min_distance + 10*cats_cost(gr,cat_loc,cats,(x + (size_X * y))));
 
-	//printf("no kitty cost:=%d\n",cost);
+	// //printf("no kitty cost:=%d\n",cost);
 
-	return cost;
-	// return (int) sum;
+	// return cost;
+	return (int) sum;
 }
 
 
