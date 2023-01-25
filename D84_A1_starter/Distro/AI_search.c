@@ -651,52 +651,41 @@ int H_cost_nokitty(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int 
 	Input arguments have the same meaning as in the H_cost() function above.
  */
 
-	//want to maximize amounts of moves it takes cats to get to mouse
-	//calculate sum of amount of moves it takes to get to mouse however, have them exponentially
-	//more expensive as cats get closer to mouse
-	//if going to collide with a cat, make it as expensive as possible
-
-	//get length of each path from each cat to mouse
-	//sum lengths of divide cheese cost by length of path
-
-	//get heursitics for shortest path but add onto it the cost of the kitties;
-
-
-	double min_sum = INT_MAX;
-	int min_num_walls = 3;
+	//create a sum for overall heurisitc
 	double sum = 0;
+	//initalize a lowests sum so that can properly compare
+	int min_sum = INT_MAX;
 	// for each cheese, get dist to mouse + sum(dist to cat)
 	// this will be the most optimal cheese
+
+	//for each cheese, calculate its weight by finiding the distance between the mouse and the cheese
+	// and dividing it by the distance between each cat and the cheese
 	for(int i = 0; i < cheeses; i++){
 		int cat_dist = 0;
 		double temp_dist = 0;
 		for(int j = 0; j < cats; j++){
 			temp_dist += (abs(cheese_loc[i][0] - x) + abs(cheese_loc[i][1] - y)) / (abs(cheese_loc[i][0] -cat_loc[j][0]) + abs(cheese_loc[i][1] - cat_loc[j][1]));
 		}
-		//get amount of walls around cheese (more walls = less savoury)
-		int cheese_grid = get_grid_position(cheese_loc[i]);
-		
-		//add cat_dist/2 since dist to cheese is more important to mouse than cats dist to cheese
-
-		int deadness = calculate_deadness(cheese_grid,gr);
-		printf("deadness of %d,%d: %d\n",cheese_loc[i][0],cheese_loc[i][1],deadness);
-		temp_dist = temp_dist * (deadness);
-		//printf("cost of %d,%d: %f\n",cheese_loc[i][0],cheese_loc[i][1],temp_dist);
-		//try to prioritize cheese that isn't at a dead end
+		//if this is now the cheapest expected distance (distance to cheese while reducing based off closeness of cats)
+		//then mark it as new cheapest
 		if(temp_dist < min_sum){
 			min_sum = temp_dist;
 		}
 	}
 
+	//now get distance between all cats and the next position
+	//for each cat, add to the expected cost of next position the cheapest
+	//expected path to cheese from said position divided by
+	//the distance of the (cat to the new position)^2
+	//[using inverse square law to deter closeness to cats; thanks asta02 for remindng me it exists]
 	for(int i = 0; i < cats; i++){
-
 		int cat_dist = abs(cat_loc[i][0] - x) + abs(cat_loc[i][1] - y);
 		sum += min_sum / pow(cat_dist,2); 
 	}
 
-	//then take that distance to the cheese
-	//and for each cat add opt_dist / dist to cat^2 
-
+	//calculate "Deadness" of next position [how much of a tunnel / dead end it is]
+	//and multiply it by its deadness score
+	sum = sum * calculate_deadness(x + size_X*y, gr); 
 
 	//capped bfs+manhatten dist:
 	// int min_distance = INT_MAX;
