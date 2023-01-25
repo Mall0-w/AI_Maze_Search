@@ -581,19 +581,23 @@ int calculate_deadness(int gridpos, double gr[graph_size][4]){
 	}
 	int curr_pos = gridpos;
 
+	//do bfs until finding a fork
 	while(deadqueue->first != NULL){
 		curr_pos = deQueue(deadqueue);
 		int deadness = 0;
 
+		//calculate the "deadness" of a square (how many sides don't have walls)
 		for(int i = 0; i < 4; i++){
 			if(gr[curr_pos][i] == 1){
 				deadness++;
 			}
 		}
-		if(deadness == 1){
+		if(deadness <= 1){
+			//if find dead end
+			//sqaure the deadness eventually (its a really bad option)
 			square = true;
 		}else if(deadness >= 3){
-			//printf("fork detected\n");
+			//if found fork, break the loop
 			break;
 		}
 
@@ -613,25 +617,21 @@ int calculate_deadness(int gridpos, double gr[graph_size][4]){
 			predecessor[curr_pos-1] = curr_pos;
 			enQueue(deadqueue,curr_pos-1);
 		}
-		//printf("iterating\n");
-
 	}
+	//now that bfs is done, free the queue
 	freeQueue(deadqueue);
+	//see how many space it took to find a fork (the dead score) by backtracking
+	//through the predessecor array
 	int dead_score = 1;
-	//printf("node that %d %d ended on: %d %d\n",gridpos%size_X,gridpos/size_Y,curr_pos%size_X,curr_pos/size_Y);
 	while(predecessor[curr_pos] != -1 && curr_pos != gridpos){
 		dead_score+=1;
 		curr_pos = predecessor[curr_pos];
-	//	printf("iterating; curr_pos = %d\n",curr_pos);
 	}
+	//if dead end was also reached, return square of dead_score otherwise return deadscore
 	if(square){
-		//printf("squaring\n");
 		return dead_score * dead_score;
 	}
 	return dead_score;
-
-	//if its at a dead end (queue got emptied)
-	//square its cost
 }
 
 int H_cost_nokitty(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_loc[1][2], int cats, int cheeses, double gr[graph_size][4])
