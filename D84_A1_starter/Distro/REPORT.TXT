@@ -8,11 +8,11 @@ Student Name 2 (last, first):
 
 Student number 1: 1006113215
 
-Student number 2:
+Student number 2: 1006213526
 
 UTORid 1: Lewisky2
 
-UTORid 2:
+UTORid 2: shahkr10
 
 READ THIS AND SIGN YOUR NAME AT THE END:
 
