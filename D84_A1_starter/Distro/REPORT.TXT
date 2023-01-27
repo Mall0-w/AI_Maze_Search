@@ -64,14 +64,16 @@ but explain carefully when needed.
 6 .- (2 marks) Describe your heuristic function for A*-nokitty. How does it work? what factors are considered
      into the cost function? is it admissible (yes/no and why)?
 
-     Our heuristic function goes over each cat and finds their manhattan distance to the mouse.  It then takes the mouse's manhattan
-     distance to the cheese, squares it, adds the square of the number of walls around the mouse (to prevent it from being trapped),
-     then divides it by the square of the cat's manhattan distance (using inverse square law with the cat to discourgae the mouse 
-     from moving closer to it).  It sums this result of (dist(cheese)^2+num_walls^2)/dist(cat)^2 for each cat and returns that as its heurisitc.
+     Our heuristic function iterates over each cheese and for each cheese it iterates over each cat
+     it then takes the minimum value of sum_over_cats((manhattan dist from new pos to cheese) / (manhattan dist from cat to cheese))
+     this is meant to locate the best possible cheese and we treat it as the distance from the new position to the cheese.
+     We then take that distance and for each cat sum (min_dist) / (dist from new pos to cat)^2, using the inverse square law to dissaude
+     the mouse from getting near the cats.  Finally, we preform a bfs on the new pos, going until it finds some square where there are at most
+     2 walls.  We multiple the height of our bfs search tree (squaring it if we hit a sqaure with 3 walls at any point) by our sum to
+     discourgae the mouse from searching tunnels or dead ends. This gives us our final heuristic.
 
-     This heurisitc is not admissible becuase the weight of a path can greatly outweigh its actual cost. for example, if there is one cat,
-     and no walls around the mouse then the heurisitc will say it will take manhattan_dist(cheese)^2 to get to the cheese which, if there is a
-     straight path from the mouse to the cheese, would overshoot the actual cost making it inadmissable.
+     This heuristic is in no way admissible, the heuristic can return a result like 4*num_cats*distance_to_cheese, which if there were
+     a straight shot from the mouse to the cheese, would be mean the heursitic is higher than the actual cost of travel.
 
 7 .- (2 marks) What is the largest limitation of the search algorithms implemented in this assignment?
      (i.e. is there anything we are missing that could lead to a smarter mouse?) - this is
