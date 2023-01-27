@@ -566,6 +566,74 @@ int H_cost(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_lo
 	return min_distance;
 }
 
+int calculate_deadness(int gridpos, double gr[graph_size][4]){
+	//basically does bfs until finds a fork in the road 
+	//this is to dissaude from getting cheeses in tunnels or dead ends
+	//unless super nessecary
+	int deadness = 0;
+	Queue* deadqueue = createQueue();
+	enQueue(deadqueue, gridpos);
+	int predecessor[graph_size];
+	bool square = false;
+
+	for(int i = 0; i < graph_size; i++){
+		predecessor[i] = -1;
+	}
+	int curr_pos = gridpos;
+
+	//do bfs until finding a fork
+	while(deadqueue->first != NULL){
+		curr_pos = deQueue(deadqueue);
+		int deadness = 0;
+
+		//calculate the "deadness" of a square (how many sides don't have walls)
+		for(int i = 0; i < 4; i++){
+			if(gr[curr_pos][i] == 1){
+				deadness++;
+			}
+		}
+		if(deadness <= 1){
+			//if find dead end
+			//sqaure the deadness eventually (its a really bad option)
+			square = true;
+		}else if(deadness >= 3){
+			//if found fork, break the loop
+			break;
+		}
+
+		if(gr[curr_pos][0] == 1 && curr_pos - size_X >= 0 && predecessor[curr_pos-size_X] == -1){
+			predecessor[curr_pos-size_X] = curr_pos;
+			enQueue(deadqueue,curr_pos-size_X);
+		}
+		if(gr[curr_pos][1] == 1 && curr_pos + 1 < graph_size && predecessor[curr_pos+1] == -1){
+			predecessor[curr_pos+1] = curr_pos;
+			enQueue(deadqueue,curr_pos+1);
+		}
+		if(gr[curr_pos][2] == 1 && curr_pos + size_X < graph_size && predecessor[curr_pos+size_X] == -1){
+			predecessor[curr_pos+size_X] = curr_pos;
+			enQueue(deadqueue,curr_pos+size_X);
+		}
+		if(gr[curr_pos][3] == 1 && curr_pos - 1 >= 0 && predecessor[curr_pos-1] == -1){
+			predecessor[curr_pos-1] = curr_pos;
+			enQueue(deadqueue,curr_pos-1);
+		}
+	}
+	//now that bfs is done, free the queue
+	freeQueue(deadqueue);
+	//see how many space it took to find a fork (the dead score) by backtracking
+	//through the predessecor array
+	int dead_score = 1;
+	while(predecessor[curr_pos] != -1 && curr_pos != gridpos){
+		dead_score+=1;
+		curr_pos = predecessor[curr_pos];
+	}
+	//if dead end was also reached, return square of dead_score otherwise return deadscore
+	if(square){
+		return dead_score * dead_score;
+	}
+	return dead_score;
+}
+
 int H_cost_nokitty(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_loc[1][2], int cats, int cheeses, double gr[graph_size][4])
 {
  /*
@@ -583,81 +651,59 @@ int H_cost_nokitty(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int 
 	Input arguments have the same meaning as in the H_cost() function above.
  */
 
-	//want to maximize amounts of moves it takes cats to get to mouse
-	//calculate sum of amount of moves it takes to get to mouse however, have them exponentially
-	//more expensive as cats get closer to mouse
-	//if going to collide with a cat, make it as expensive as possible
+	//create a sum for overall heurisitc
+	double sum = 0;
+	//initalize a lowests sum so that can properly compare
+	int min_sum = INT_MAX;
+	// for each cheese, get dist to mouse + sum(dist to cat)
+	// this will be the most optimal cheese
 
-	//get length of each path from each cat to mouse
-	//sum lengths of divide cheese cost by length of path
-
-	//get heursitics for shortest path but add onto it the cost of the kitties;
-
-
-	// double min_sum = INT_MAX;
-	// int min_num_walls = 3;
-	// double sum = 0;
-	// // for each cheese, get dist to mouse + sum(dist to cat)
-	// // this will be the most optimal cheese
-	// for(int i = 0; i < cheeses; i++){
-	// 	int cat_dist = 0;
-	// 	for(int j = 0; j < cats; j++){
-	// 		cat_dist += abs(cheese_loc[i][0] -cat_loc[j][0]) + abs(cheese_loc[i][1] - cat_loc[j][1]);
-	// 	}
-	// 	//get amount of walls around cheese (more walls = less savoury)
-	// 	int cheese_grid = get_grid_position(cheese_loc[i]);
-	// 	int num_walls = 0;
-	// 	bool looped= false;
-	// 	for(int j = 0; j < 4; j++){
-	// 		if( gr[cheese_grid][j] == 0){
-	// 			num_walls++;
-	// 		}
-	// 	}
-		
-	// 	//add cat_dist/2 since dist to cheese is more important to mouse than cats dist to cheese
-	// 	double temp_dist = (abs(cheese_loc[i][0] - x) + abs(cheese_loc[i][1] - y)) + (cat_dist/2);
-
-	// 	//try to prioritize cheese that isn't at a dead end
-	// 	if(temp_dist < min_sum || (min_num_walls == 3 && num_walls < min_num_walls)){
-	// 		min_sum = temp_dist;
-	// 		min_num_walls = num_walls;
-	// 	}
-	// }
-
-	// for(int i = 0; i < cats; i++){
-
-	// 	int cat_dist = abs(cat_loc[i][0] - x) + abs(cat_loc[i][1] - y);
-	// 	sum += min_sum / pow(cat_dist,2); 
-	// }
-
-	//then take that distance to the cheese
-	//and for each cat add opt_dist / dist to cat^2 
-
-
-	//capped bfs+manhatten dist:
-	int min_num_walls = 3;
-	int min_distance = INT_MAX;
+	//for each cheese, calculate its weight by finiding the distance between the mouse and the cheese
+	// and dividing it by the distance between each cat and the cheese
 	for(int i = 0; i < cheeses; i++){
-		int new_dist = (abs(x - cheese_loc[i][0]) + abs(y - cheese_loc[i][1]));
-
-		//get amount of walls around cheese (more walls = less savoury)
-		int cheese_grid = get_grid_position(cheese_loc[i]);
-		int num_walls = 0;
-		for(int j = 0; j < 4; j++){
-			if( gr[cheese_grid][j] == 0){
-				num_walls++;
-			}
+		int cat_dist = 0;
+		double temp_dist = 0;
+		for(int j = 0; j < cats; j++){
+			temp_dist += (abs(cheese_loc[i][0] - x) + abs(cheese_loc[i][1] - y)) / (abs(cheese_loc[i][0] -cat_loc[j][0]) + abs(cheese_loc[i][1] - cat_loc[j][1]));
 		}
-		if (new_dist < min_distance){
-			min_distance = new_dist;
+		//if this is now the cheapest expected distance (distance to cheese while reducing based off closeness of cats)
+		//then mark it as new cheapest
+		if(temp_dist < min_sum){
+			min_sum = temp_dist;
 		}
 	}
-	int cost= (int) (min_distance + 10*cats_cost(gr,cat_loc,cats,(x + (size_X * y))));
 
-	//printf("no kitty cost:=%d\n",cost);
+	//now get distance between all cats and the next position
+	//for each cat, add to the expected cost of next position the cheapest
+	//expected path to cheese from said position divided by
+	//the distance of the (cat to the new position)^2
+	//[using inverse square law to deter closeness to cats; thanks asta02 for remindng me it exists]
+	for(int i = 0; i < cats; i++){
+		int cat_dist = abs(cat_loc[i][0] - x) + abs(cat_loc[i][1] - y);
+		sum += min_sum / pow(cat_dist,2); 
+	}
 
-	return cost;
-	// return (int) sum;
+	//calculate "Deadness" of next position [how much of a tunnel / dead end it is]
+	//and multiply it by its deadness score
+	sum = sum * calculate_deadness(x + size_X*y, gr); 
+
+	//capped bfs+manhatten dist:
+	// int min_distance = INT_MAX;
+	// for(int i = 0; i < cheeses; i++){
+	// 	int new_dist = (abs(x - cheese_loc[i][0]) + abs(y - cheese_loc[i][1]));
+
+	// 	//get amount of walls around cheese (more walls = less savoury)
+	// 	int cheese_grid = get_grid_position(cheese_loc[i]);
+	// 	if (new_dist < min_distance){
+	// 		min_distance = new_dist;
+	// 	}
+	// }
+	// int cost= (int) (min_distance + 10*cats_cost(gr,cat_loc,cats,(x + (size_X * y))));
+
+	// //printf("no kitty cost:=%d\n",cost);
+
+	// return cost;
+	return (int) sum;
 }
 
 
