@@ -4,7 +4,7 @@ ________________________________________________
 
 Student Name 1 (last, first): Lewis, Kyle
 
-Student Name 2 (last, first):
+Student Name 2 (last, first): Shah Krutik
 
 Student number 1: 1006113215
 
@@ -20,7 +20,7 @@ READ THIS AND SIGN YOUR NAME AT THE END:
 honesty and plaguarism. All work submitted as part
 of this assignment is my own.
 
-	Signed: _Kyle Lewis__	_(student 2 name here)__
+	Signed: _Kyle Lewis__	_Krutik Shah__
 
 
 (-2.5 marks for failing to provide the identifying
